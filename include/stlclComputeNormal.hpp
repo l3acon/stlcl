@@ -106,7 +106,7 @@ void ComputeNormal(
     cl_int localstatus;
 
     //size_t vertexBytes = sizeof(float)*12;
-    size_t vertexBytes = nVerticies * sizeof(float);
+    //size_t vertexBytes = nVerticies * sizeof(float);
     size_t normalBytes = (nVerticies * sizeof(float))/3;
 
     //initalize CL interface and build kernel

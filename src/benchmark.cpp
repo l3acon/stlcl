@@ -13,12 +13,15 @@
 #include <cmath>
 #include <time.h>
 
+#include "stl.hpp"
+
+// the following inclues might be consolidated
+#include "cli.hpp"
 #include "bitonicZSort.hpp"
 #include "stlclVertexTransform.hpp"
 #include "stlclComputeNormal.hpp"
-#include "stl.hpp"
-#include "cli.hpp"
 #include "kernels.hpp"
+
 
 #define CL_ERRORS 1
 
@@ -35,10 +38,6 @@ int main()
 
     std::vector<float> verticies;
     std::vector<float> normals;
-
-    std::vector<cl_int> errorsVT;
-    std::vector<cl_int> errorsCN;
-    std::vector<cl_int> errorsZS;
     
     //later we can just use the memory in a std::vector?
     float * vertexBuffer;
@@ -92,26 +91,29 @@ int main()
         clock_gettime(CLOCK_REALTIME, &watch[i]);
     #endif
 
-
         // do vertext transform
-        //cliVertexXform.VertexTransform( /* ... */);
+        
+        
+        // CPU Z sort
+        //qsort(vertexBuffer, verticies.size()/9, sizeof(float)*9, vertex_comparator);
 
+        /*
+        cliComputeNormals.ComputeNormals(
+            cliBitonicZSort.Sort(
+                vertexBuffer,
+                CL_FALSE,       // non-blocking 
+                cliVertexXform.VertexTransform(A, )
+                )
+            );
+        cliBitonicZSort.Wait();
+
+        */
+        
         #if CL_ERRORS
         printf("_kVertexTransform:\n");
         cliVertexTransform.PrintErrors();
-        #endif
-
-        // Z sort
-        //qsort(vertexBuffer, verticies.size()/9, sizeof(float)*9, vertex_comparator);
-        //cliBitonicZSort.Sort(/* ... */);
-        #if CL_ERRORS
         printf("_kbitonic_STL_Sort:\n");
         cliBitonicZSort.PrintErrors();
-        #endif
-        // compute normals
-        //cliComputeNormals.ComputeNormals( /* ... */);
-        
-        #if CL_ERRORS
         printf("_kComputeNormal:\n");
         cliComputeNormals.PrintErrors();
         #endif

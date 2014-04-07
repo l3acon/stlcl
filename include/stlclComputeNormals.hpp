@@ -129,7 +129,7 @@ cl_mem ComputeNormals(
         0, 
         sizeof(cl_mem), 
         (void*) &verticies);
-    
+
     cl_mem buffer = KernelArgs(
         normalBuffer,
         normalBytes,
@@ -180,7 +180,6 @@ cl_mem ComputeNormals(
     //clReleaseMemObject(buffer);
 
     // Free host resources
-    printf("hi\n");
 
     return buffer;
 }

@@ -105,7 +105,7 @@ class stlclBitonicZSort : public CLI
                 ++passOfStage) 
             {
                 // pass of the current stage
-                printf("Pass no: %d\n",passOfStage);
+                //printf("Pass no: %d\n",passOfStage);
                 local_status = clSetKernelArg(
                     kernel, 
                     2, 
@@ -211,7 +211,7 @@ class stlclBitonicZSort : public CLI
                 ++passOfStage) 
             {
                 // pass of the current stage
-                printf("Pass no: %d\n",passOfStage);
+                //printf("Pass no: %d\n",passOfStage);
                 local_status = clSetKernelArg(
                     kernel, 
                     2, 

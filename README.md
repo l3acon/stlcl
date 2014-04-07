@@ -1,4 +1,4 @@
-stlclstransform
+stlcl
 ===============
 
-STL object transformations with OpenCL
+cpp classes for STL object transformations and Z-sorting 

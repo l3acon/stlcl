@@ -57,9 +57,9 @@ const char * stl_cl_vertexTransform_kernel_source  =
 
 // (GDDR5 can transfer at most 32 BYTES per clock)
 
-const char * stl_cl_computeNormal_kernel_source  =
+const char * stl_cl_computeNormals_kernel_source  =
 "__kernel                                               "
-"\nvoid _kComputeNormal(                                "
+"\nvoid _kComputeNormals(                                "
 "\n            __global float *vi,                      "
 "\n            __global float *no)                   	"
 "\n{                                                    "
@@ -118,7 +118,7 @@ const char * bitonic_STL_sort_source  =
 "\n      int compareResult;                                      	"
 "\n      unsigned int  leftId = (threadId & (pairDistance - 1)) + 	" 
 "			(threadId >> (stage - passOfStage) ) * blockWidth;  	" 
-"\n      unsigned int  rightId = leftId + pairDistance;  			" 
+"\n      unsigned int rightId = leftId + pairDistance;  			" 
 "\n        															" 
 "\n      Vertex leftElement, rightElement;  	" 
 "\n    	 Vertex *greater, *lesser;  			" 

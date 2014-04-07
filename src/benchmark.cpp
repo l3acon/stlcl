@@ -19,7 +19,7 @@
 #include "cli.hpp"
 #include "bitonicZSort.hpp"
 #include "stlclVertexTransform.hpp"
-#include "stlclComputeNormal.hpp"
+#include "stlclComputeNormals.hpp"
 #include "kernels.hpp"
 
 
@@ -40,8 +40,6 @@ int main()
     std::vector<float> normals;
     
     //later we can just use the memory in a std::vector?
-    float * vertexBuffer;
-    float * normalBuffer;
 
     float A[12];
 
@@ -63,6 +61,7 @@ int main()
         return 1;
     }
 
+
     // set up CLInterface resrouces
     stlclVertexTransform cliVertexTransform(
         stl_cl_vertexTransform_kernel_source, 
@@ -72,13 +71,13 @@ int main()
     
     stlclBitonicZSort cliBitonicZSort(
         bitonic_STL_sort_source,
-        "_kbitonic_STL_Sort");
+        "_kBitonic_STL_Sort");
     cliBitonicZSort.Initialize();
     cliBitonicZSort.Build();
 
     stlclComputeNormals cliComputeNormals(
-        stl_cl_computeNormal_kernel_source, 
-        "_kComputeNormal");
+        stl_cl_computeNormals_kernel_source, 
+        "_kComputeNormals");
     cliComputeNormals.Initialize();
     cliComputeNormals.Build();
 
@@ -95,21 +94,26 @@ int main()
         //qsort(vertexBuffer, verticies.size()/9, sizeof(float)*9, vertex_comparator);
 
         cliBitonicZSort.TwosPad(verticies);
+        float* vertexBuffer = (float*) malloc(sizeof(float) * verticies.size());
+        float* normalBuffer = (float*) malloc(sizeof(float) * verticies.size()/3);
+
         cl_mem vertex_des = cliVertexTransform.VertexTransform( A, verticies);
+        printf("VT done\n");
         cl_mem sort_des = cliBitonicZSort.Sort(
-                vertexBuffer,
-                CL_FALSE,       // non-blocking ?
-                vertex_des);
-        
+            vertexBuffer,
+            CL_TRUE,       // blocking ?
+            vertex_des);
+        printf("Sort done\n");
         cl_mem cldes = cliComputeNormals.ComputeNormals(
             verticies.size(),
             normalBuffer,
-            CL_FALSE,       // non-blocking?
+            CL_TRUE,       // non-blocking?
             sort_des);
+        printf("CN done\n");
 
         cliBitonicZSort.Wait();
 
-        clReleaseMemObject(cldes);
+        //clReleaseMemObject(cldes);
         
 
 
@@ -122,6 +126,8 @@ int main()
         cliComputeNormals.PrintErrors();
         #endif
         
+        free(vertexBuffer);
+        free(normalBuffer);
     #if TIME    
         clock_gettime(CLOCK_REALTIME, &stop[i]); // Works on Linux but not OSX
     }

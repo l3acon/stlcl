@@ -81,6 +81,7 @@ class stlclBitonicZSort : public CLI
             0, 
             sizeof(cl_mem), 
             (void *) &verticies);
+        
         unsigned int stage, passOfStage, numStages, temp;
         stage = passOfStage = numStages = 0;
         

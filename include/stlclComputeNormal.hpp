@@ -98,10 +98,23 @@ void ComputeNormals(
     return ;
 }
 
-void ComputeNormal(
+
+cl_mem ComputeNormals(
     unsigned int nVerticies,
-    cl_mem verticies, 
-    float *normalBuffer) 
+    float *normalBuffer,
+    cl_mem verticies)
+    {   return ComputeNormals(
+        nVerticies,
+        normalBuffer,
+        CL_TRUE,
+        verticies); }
+
+
+cl_mem ComputeNormals(
+    unsigned int nVerticies,
+    float *normalBuffer,
+    int cli_flags,
+    cl_mem verticies)
 {
     cl_int localstatus;
 
@@ -157,7 +170,7 @@ void ComputeNormal(
     clEnqueueReadBuffer(
         cmdQueue, 
         buffer, 
-        CL_TRUE,            // CL_TRUE is a BLOCKING read
+        cli_flags,            // CL_TRUE is a BLOCKING read
         0, 
         normalBytes, 
         normalBuffer, 
@@ -166,11 +179,11 @@ void ComputeNormal(
         NULL);
 
     // Free OpenCL resources
-    clReleaseMemObject(buffer);
+    //clReleaseMemObject(buffer);
 
     // Free host resources
 
-    return ;
+    return buffer;
 }
 
 

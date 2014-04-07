@@ -43,11 +43,11 @@ int main()
     float * vertexBuffer;
     float * normalBuffer;
 
-    XformMat A;
+    float A[12];
 
     //initalize our transform matrix naively
-    for (int i = 0; i < A.size; ++i)
-        A.stlTransformMatrix[i] = (float) i;
+    for (int i = 0; i < 12; ++i)
+        A[i] = (float) i;
 
     //file stuff
     if(stlRead(stlFile, verticies, normals))
@@ -89,26 +89,30 @@ int main()
     for (int i = 0; i < BENCHSIZE; ++i)
     {
         clock_gettime(CLOCK_REALTIME, &watch[i]);
-    #endif
-
-        // do vertext transform
-        
+    #endif        
         
         // CPU Z sort
         //qsort(vertexBuffer, verticies.size()/9, sizeof(float)*9, vertex_comparator);
 
-        /*
-        cliComputeNormals.ComputeNormals(
-            cliBitonicZSort.Sort(
+        cliBitonicZSort.TwosPad(verticies);
+        cl_mem vertex_des = cliVertexTransform.VertexTransform( A, verticies);
+        cl_mem sort_des = cliBitonicZSort.Sort(
                 vertexBuffer,
-                CL_FALSE,       // non-blocking 
-                cliVertexXform.VertexTransform(A, )
-                )
-            );
+                CL_FALSE,       // non-blocking ?
+                vertex_des);
+        
+        cl_mem cldes = cliComputeNormals.ComputeNormals(
+            verticies.size(),
+            normalBuffer,
+            CL_FALSE,       // non-blocking?
+            sort_des);
+
         cliBitonicZSort.Wait();
 
-        */
+        clReleaseMemObject(cldes);
         
+
+
         #if CL_ERRORS
         printf("_kVertexTransform:\n");
         cliVertexTransform.PrintErrors();

@@ -22,3 +22,7 @@ int vertex_comparator(const void *v1, const void *v2)
     else
         return 0;
 }
+
+
+// CPU Z sort
+        //qsort(vertexBuffer, verticies.size()/9, sizeof(float)*9, vertex_comparator);

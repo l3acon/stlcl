@@ -61,7 +61,6 @@ int main()
         return 1;
     }
 
-
     // set up CLInterface resrouces
     stlclVertexTransform cliVertexTransform(
         stl_cl_vertexTransform_kernel_source, 
@@ -90,31 +89,40 @@ int main()
         clock_gettime(CLOCK_REALTIME, &watch[i]);
     #endif        
         
-        // CPU Z sort
-        //qsort(vertexBuffer, verticies.size()/9, sizeof(float)*9, vertex_comparator);
-
         cliBitonicZSort.TwosPad(verticies);
+
         float* vertexBuffer = (float*) malloc(sizeof(float) * verticies.size());
         float* normalBuffer = (float*) malloc(sizeof(float) * verticies.size()/3);
 
-        cl_mem vertex_des = cliVertexTransform.VertexTransform( A, verticies);
-        printf("VT done\n");
+        cl_mem vertex_des = cliVertexTransform.VertexTransform(
+            &A[0], 
+            verticies);
+
+        printf("VT done s:%d\n", verticies.size());
         cl_mem sort_des = cliBitonicZSort.Sort(
             vertexBuffer,
             CL_TRUE,       // blocking ?
             vertex_des);
+
         printf("Sort done\n");
-        cl_mem cldes = cliComputeNormals.ComputeNormals(
-            verticies.size(),
-            normalBuffer,
-            CL_TRUE,       // non-blocking?
-            sort_des);
-        printf("CN done\n");
+        //cl_mem cn_des = cliComputeNormals.ComputeNormals(
+        //    verticies.size(), 
+        //    normalBuffer, 
+        //    CL_TRUE,       // non-blocking?
+        //    sort_des);
+
+        //printf("CN done\n");
 
         cliBitonicZSort.Wait();
 
-        //clReleaseMemObject(cldes);
+        for (int i = 0; i < verticies.size(); ++i)
+        {
+            printf("i=%d: %f\n",i, vertexBuffer[i]);
+        }
         
+        clReleaseMemObject(vertex_des);
+        clReleaseMemObject(sort_des);
+        //clReleaseMemObject(cn_des);
 
 
         #if CL_ERRORS

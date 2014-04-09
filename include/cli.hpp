@@ -10,6 +10,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <vector>
+#include <string.h>
 
 // OpenCL includes
 #ifdef __APPLE__
@@ -207,7 +208,7 @@ public:
             NULL,
             &localstatus);
 
-        if(memflag == CL_MEM_READ_ONLY)
+        if(memflag == CL_MEM_READ_ONLY || memflag == CL_MEM_READ_WRITE)
             localstatus = clEnqueueWriteBuffer(
                 cmdQueue,
                 clmemDes,
@@ -218,6 +219,7 @@ public:
                 0,
                 NULL,
                 NULL);
+        
         localstatus = clSetKernelArg(
             kernel,
             argn,
@@ -225,7 +227,6 @@ public:
             &clmemDes);
 
         errors.push_back(localstatus);
-
         return clmemDes;
     }
 

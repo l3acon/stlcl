@@ -33,7 +33,7 @@ class stlclBitonicZSort : public CLI
     bool IsPowerOfTwo(unsigned long x)
         {   return (x & (x - 1)) == 0;  }
 
-    void TwosPad(std::vector<float> verticies)
+    void TwosPad(std::vector<float> &verticies)
     {
         //  --------------------------
         //
@@ -48,10 +48,11 @@ class stlclBitonicZSort : public CLI
         padded_size = 0x1 << p2;
 
         padd = 0;
+
         // it just needs to be larger really
         // I don't know if CPP can do this
         // in an efficient way
-        while(verticies.size()/VERTEX_FLOATS < padded_size)
+        while(verticies.size() < padded_size*9)
         {
             verticies.push_back(-1.0);
             ++padd;
@@ -139,7 +140,7 @@ class stlclBitonicZSort : public CLI
             verticies, 
             (cl_int) cli_flags,        // CL_TRUE is a BLOCKING read
             0, 
-            sizeof(Vertex)*padded_size, 
+            VERTEX_FLOATS*padded_size, 
             buffer, 
             0, 
             NULL, 
@@ -151,10 +152,11 @@ class stlclBitonicZSort : public CLI
     float* InPlaceSort(unsigned int size, float* verticies)
     {
         cl_int local_status;
-        if(!IsPowerOfTwo( size ))
+        if(IsPowerOfTwo( size/9 ))
+            padded_size = size/9;
+        else
             return NULL;
         
-        padded_size = size;
 
         //  --------------------------
         //
@@ -175,8 +177,8 @@ class stlclBitonicZSort : public CLI
         cl_mem pInputBuffer_clmem = clCreateBuffer(
             context, 
             CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR, 
-            padded_size * sizeof(Vertex), 
-            (Vertex*) &verticies,
+            padded_size * sizeof(float)*VERTEX_FLOATS, 
+            (float*) &verticies,
             &local_status);
 
       	errors.push_back(local_status); 
@@ -240,14 +242,14 @@ class stlclBitonicZSort : public CLI
             } //end of for passStage = 0:stage-1
         } //end of for stage = 0:numStage-1
      
-        Vertex *mapped_input_buffer =
-            (Vertex *)clEnqueueMapBuffer(
+        float *mapped_input_buffer =
+            (float *)clEnqueueMapBuffer(
                 cmdQueue, 
                 pInputBuffer_clmem, 
                 true, 
                 CL_MAP_READ, 
                 0, 
-                sizeof(Vertex) * padded_size, 
+                VERTEX_FLOATS* sizeof(float) * padded_size, 
                 0, 
                 NULL, 
                 NULL, 

@@ -33,8 +33,11 @@ public:
         size_t vertexBytes = nVerticies * sizeof(float);
         float transformArray[VERTEX_TRANFORM_SIZE];
         
+        printf("wat\n");
         for (int i = 0; i < VERTEX_TRANFORM_SIZE; ++i)
-            transformArray[i] = transform[i];
+        {
+            transformArray[i] = transform[i]; 
+        }
 
         cl_mem bufferA = KernelArgs(
             transformArray,
@@ -46,7 +49,7 @@ public:
             &verticies.front(),
             vertexBytes,
             1,
-            CL_MEM_READ_ONLY);
+            CL_MEM_READ_WRITE);
 
         cl_mem bufferC = clCreateBuffer(
             context, 

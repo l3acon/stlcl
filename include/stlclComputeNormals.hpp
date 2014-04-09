@@ -23,14 +23,14 @@ public:
     {}
 
 void ComputeNormals(
-    unsigned int nVerticies,
+    unsigned int nVerticies, 
     float *verticies, 
     float *normalBuffer) 
 {
     cl_int localstatus;
 
-    size_t vertexBytes = nVerticies * sizeof(float);
-    size_t normalBytes = (nVerticies * sizeof(float))/3;
+    size_t vertexBytes = nVerticies * sizeof(float); 
+    size_t normalBytes = (nVerticies * sizeof(float))/3; 
 
     //initalize CL interface and build kernel
     // declare CL memory buffers
@@ -39,7 +39,6 @@ void ComputeNormals(
         vertexBytes,
         0,
         CL_MEM_READ_ONLY);
-
 
     cl_mem bufferC = KernelArgs(
         normalBuffer,
@@ -93,7 +92,6 @@ void ComputeNormals(
     clReleaseMemObject(bufferC);
 
     // Free host resources
-
     return ;
 }
 
@@ -134,7 +132,7 @@ cl_mem ComputeNormals(
         normalBuffer,
         normalBytes,
         1,
-        CL_MEM_WRITE_ONLY);
+        CL_MEM_READ_WRITE);
 
     // Define an index space (global work size) of work 
     // items for 
@@ -151,7 +149,7 @@ cl_mem ComputeNormals(
     // Execute the kernel by using 
     // clEnqueueNDRangeKernel().
     // 'globalWorkSize' is the 1D dimension of the 
-    // work-items
+    // work-items 
     localstatus = clEnqueueNDRangeKernel(
         cmdQueue, 
         kernel, 

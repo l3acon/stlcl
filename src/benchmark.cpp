@@ -17,10 +17,7 @@
 
 // the following inclues might be consolidated
 #include "cli.hpp"
-#include "bitonicZSort.hpp"
-#include "stlclVertexTransform.hpp"
-#include "stlclComputeNormals.hpp"
-#include "kernels.hpp"
+#include "ocls.hpp"
 
 
 #define CL_ERRORS 1
@@ -62,76 +59,99 @@ int main()
     }
 
     // set up CLInterface resrouces
-    stlclVertexTransform cliVertexTransform(
-        stl_cl_vertexTransform_kernel_source, 
-        "_kVertexTransform");
-    cliVertexTransform.Initialize();
-    cliVertexTransform.Build();
-    
-    stlclBitonicZSort cliBitonicZSort(
+    CLI cli;
+
+    OCLS vertexTransform(stl_cl_vertexTransform_kernel_source,
+        "_kVertexTransform",
+        cli.context,
+        cli.devices,
+        cli.numDevices);
+    cli.kernels.push_back(vertexTransform.kernel);
+    printf("VTz:\n");
+    vertexTransform.PrintErrors();
+
+    OCLS bitonicZSort(
         bitonic_STL_sort_source,
-        "_kBitonic_STL_Sort");
-    cliBitonicZSort.Initialize();
-    cliBitonicZSort.Build();
+        "_kBitonic_STL_Sort",
+        cli.context,
+        cli.devices,
+        cli.numDevices);
+    cli.kernels.push_back(bitonicZSort.kernel);
+    printf("BZSz:\n");
+    bitonicZSort.PrintErrors();
 
-    stlclComputeNormals cliComputeNormals(
-        stl_cl_computeNormals_kernel_source, 
-        "_kComputeNormals");
-    cliComputeNormals.Initialize();
-    cliComputeNormals.Build();
-
-
+    OCLS computeNormals(
+        stl_cl_computeNormals_kernel_source,
+        "_kComputeNormals",
+        cli.context,
+        cli.devices,
+        cli.numDevices);
+    cli.kernels.push_back(computeNormals.kernel);
+    printf("CNz:\n");
+    computeNormals.PrintErrors();
     // do the benchmark
     #if TIME
     timespec watch[BENCHSIZE], stop[BENCHSIZE];
     for (int i = 0; i < BENCHSIZE; ++i)
-    {
+    {s
         clock_gettime(CLOCK_REALTIME, &watch[i]);
     #endif        
         
-        cliBitonicZSort.TwosPad(verticies);
+        cli.TwosPad(verticies);
 
         float* vertexBuffer = (float*) malloc(sizeof(float) * verticies.size());
         float* normalBuffer = (float*) malloc(sizeof(float) * verticies.size()/3);
 
-        cl_mem vertex_des = cliVertexTransform.VertexTransform(
+        cli.VertexTransform(
             &A[0], 
-            verticies);
+            verticies,
+            0);
 
+        cli.Finish();
         printf("VT done s:%d\n", verticies.size());
-        cl_mem sort_des = cliBitonicZSort.Sort(
-            vertexBuffer,
-            CL_TRUE,       // blocking ?
-            vertex_des);
+
+        cli.Sort(1);
+        cli.Finish();
 
         printf("Sort done\n");
-        //cl_mem cn_des = cliComputeNormals.ComputeNormals(
-        //    verticies.size(), 
-        //    normalBuffer, 
-        //    CL_TRUE,       // non-blocking?
-        //    sort_des);
 
-        //printf("CN done\n");
 
-        cliBitonicZSort.Wait();
+        cli.Finish();
 
-        for (int i = 0; i < verticies.size(); ++i)
-        {
-            printf("i=%d: %f\n",i, vertexBuffer[i]);
-        }
+
+        cli.ComputeNormals(
+            verticies.size(), 
+            normalBuffer, 
+            CL_TRUE,
+            2);
+        cli.Finish();
+
+        printf("CN done\n");
         
-        clReleaseMemObject(vertex_des);
-        clReleaseMemObject(sort_des);
-        //clReleaseMemObject(cn_des);
+        clEnqueueReadBuffer(
+             cli.cmdQueue, 
+             cli.cl_memory_descriptors[0], 
+             CL_TRUE,        // CL_TRUE is a BLOCKING read
+             0, 
+             verticies.size()*sizeof(float), 
+             vertexBuffer, 
+             0, 
+             NULL, 
+             NULL);
+
+        for (int i = 0; i < verticies.size()/3; ++i)
+        {
+            printf("i=%d: %f\n", i, normalBuffer[i]);
+        }
 
 
         #if CL_ERRORS
-        printf("_kVertexTransform:\n");
-        cliVertexTransform.PrintErrors();
-        printf("_kbitonic_STL_Sort:\n");
-        cliBitonicZSort.PrintErrors();
-        printf("_kComputeNormal:\n");
-        cliComputeNormals.PrintErrors();
+        printf("all:\n");
+        cli.PrintErrors();
+        //printf("_kbitonic_STL_Sort:\n");
+        //cli.bitonicZSort.PrintErrors();
+        //printf("_kComputeNormal:\n");
+        //cli.computeNormals.PrintErrors();
         #endif
         
         free(vertexBuffer);
@@ -146,9 +166,8 @@ int main()
     printf("[elapsed time] %f\n", acc/BENCHSIZE);
     #endif
     
-    cliVertexTransform.Release();
-    cliBitonicZSort.Release();
-    cliComputeNormals.Release();
+    cli.Release();
+    vertexTransform.Release();
 
     return 0;
 }

@@ -12,6 +12,8 @@
 #include <vector>
 #include <string.h>
 
+#include "kernels.hpp"
+
 // OpenCL includes
 #ifdef __APPLE__
 #include <OpenCL/opencl.h>
@@ -23,6 +25,10 @@
 #error Platform not supported
 #endif
 
+#define WORK_GROUP_SIZE 64 // logical errors occur after work group size > 128
+#define VERTEX_FLOATS 9
+#define VERTEX_TRANFORM_SIZE 12
+
 #define STATUS_CHAR_SIZE 35
 
 using namespace std;
@@ -31,8 +37,9 @@ class CLI
 {
 public:
 
-    const char* programSource;
-    const char * kernel_name;
+    unsigned int padd;
+    size_t original_vertex_size;
+    size_t padded_size;
 
     //initialize our data we're keeping track of
     // used for  1: Discover and initialize the platforms
@@ -45,29 +52,18 @@ public:
     cl_context context;
     // used for 4: Create a command queue
     cl_command_queue cmdQueue;
-    // used for 7: Create and compile the program     
-    cl_program program;
-    // used for 8: Create the kernel
-    cl_kernel kernel;
-    // internal status to check the output of each API call
+
+    std::vector<cl_kernel> kernels;
+
     std::vector<cl_int> errors;
-    //I think the vectors need to be constructed, even in a struct
-    //std::vector<cl_mem> clMemDes;
 
-    CLI ( const char* kernalSource,  const char* kernalName) 
-    {
-        programSource = kernalSource; 
-        kernel_name = kernalName;
-    }
-
-    void Wait()
-        {    clFinish(cmdQueue);    }
+    std::vector<cl_mem> cl_memory_descriptors;
 
     // Initialize our CLI wrapper
     // get OpenCL platform IDs
     // get OpenCL device IDs
     // create OpenCL Context and Command Queue
-    void Initialize()
+    CLI()
     {
         //-----------------------------------------------------
         // STEP 1: Discover and initialize the platforms
@@ -145,48 +141,10 @@ public:
         return ;
     }
 
+    void Finish()
+        {    clFinish(cmdQueue);    }
 
-    // wrapper for building OpenCL program
-    // 
-    void Build ()
-    {
-        cl_int localstatus;
 
-        //-----------------------------------------------------
-        // STEP 7: Create and compile the program
-        //----------------------------------------------------- 
-
-        // Create a program using clCreateProgramWithSource()
-        program = clCreateProgramWithSource(
-            context, 
-            1, 
-            (const char**)&programSource,                                 
-            NULL, 
-            &localstatus);
-        errors.push_back(localstatus);
-
-        // Build (compile) the program for the devices with
-        // clBuildProgram()
-        localstatus = clBuildProgram(
-            program, 
-            numDevices, 
-            devices, 
-            NULL, 
-            NULL, 
-            NULL);
-        
-        errors.push_back(localstatus);
-
-        //-----------------------------------------------------
-        // STEP 8: Create the kernel
-        //----------------------------------------------------- 
-        // Use clCreateKernel() to create a kernel from the 
-        // vector addition function (named "vecadd")
-        kernel = clCreateKernel(program, kernel_name , &localstatus);
-        errors.push_back(localstatus);
-
-        return;
-    }
 
     // wraper function for kernel arguments
     // this reduces the code required to
@@ -195,7 +153,8 @@ public:
         void* ptr,              // I want to restrict this
         size_t bufferBytes,  
         int argn, 
-        cl_mem_flags memflag)
+        cl_mem_flags memflag,
+        unsigned int kernelIndex)
     {
         cl_int localstatus;
         cl_mem clmemDes;
@@ -221,7 +180,7 @@ public:
                 NULL);
         
         localstatus = clSetKernelArg(
-            kernel,
+            kernels[kernelIndex],
             argn,
             sizeof(cl_mem),
             &clmemDes);
@@ -233,8 +192,14 @@ public:
     // release CLI memory
     void Release()
     {
-        clReleaseKernel(kernel);
-        clReleaseProgram(program);
+        //release all cl_mem memory discriptor objects
+        for( std::vector<cl_mem>::const_iterator i = cl_memory_descriptors.begin(); 
+            i != cl_memory_descriptors.end(); ++i)
+        {
+            clReleaseMemObject(*i);
+        }
+        //clReleaseKernel(kernels[i]);
+        //clReleaseProgram(program);
         clReleaseCommandQueue(cmdQueue);
         clReleaseContext(context);
         free(platforms);
@@ -315,6 +280,277 @@ public:
     }
 
 
+
+void ComputeNormals(
+    unsigned int nVerticies,
+    float *normalBuffer,
+    int cli_flags,
+    unsigned int kernelIndex)
+{
+    cl_int localstatus;
+
+    //size_t vertexBytes = sizeof(float)*12;
+    //size_t vertexBytes = nVerticies * sizeof(float);
+    size_t normalBytes = (nVerticies * sizeof(float))/3;
+
+    //initalize CL interface and build kernel
+    // declare CL memory buffers
+
+    clSetKernelArg(
+        kernels[kernelIndex], 
+        0, 
+        sizeof(cl_mem), 
+        (void*) &cl_memory_descriptors[0]);
+
+    cl_memory_descriptors.push_back( 
+        KernelArgs(
+            normalBuffer,
+            normalBytes,
+            1,
+            CL_MEM_READ_WRITE,
+            kernelIndex)
+    );
+
+    // Define an index space (global work size) of work 
+    // items for 
+    // execution. A workgroup size (local work size) is not 
+    // required, 
+    // but can be used.
+    size_t globalWorkSize[1];
+    
+    // There are 'elements' work-items 
+    globalWorkSize[0] = nVerticies/9;
+
+    // STEP 11: Enqueue the kernel for execution
+    
+    // Execute the kernel by using 
+    // clEnqueueNDRangeKernel().
+    // 'globalWorkSize' is the 1D dimension of the 
+    // work-items 
+    localstatus = clEnqueueNDRangeKernel(
+        cmdQueue, 
+        kernels[kernelIndex], 
+        1, 
+        NULL, 
+        globalWorkSize, 
+        NULL, 
+        0, 
+        NULL, 
+        NULL);
+
+    errors.push_back(localstatus);
+
+    clEnqueueReadBuffer(
+        cmdQueue, 
+        cl_memory_descriptors[1], 
+        cli_flags,            // CL_TRUE is a BLOCKING read
+        0, 
+        normalBytes, 
+        normalBuffer, 
+        0, 
+        NULL, 
+        NULL);
+
+    // Free OpenCL resources
+    //clReleaseMemObject(buffer);
+
+    // Free host resources
+
+    return ;
+}
+
+void VertexTransform(
+        float* transform, 
+        std::vector<float> &verticies,
+        unsigned int kernelIndex)
+    {
+        cl_int localstatus;
+        unsigned int nVerticies = verticies.size();
+        size_t vertexBytes = nVerticies * sizeof(float);
+        float transformArray[VERTEX_TRANFORM_SIZE];
+        
+        for (int i = 0; i < VERTEX_TRANFORM_SIZE; ++i)
+        {
+            transformArray[i] = transform[i]; 
+        }
+
+        cl_mem bufferA = KernelArgs(
+            transformArray,
+            VERTEX_TRANFORM_SIZE*sizeof(float),
+            0,
+            CL_MEM_READ_ONLY,
+            kernelIndex);
+
+        cl_mem bufferB = KernelArgs(
+            &verticies.front(),
+            vertexBytes,
+            1,
+            CL_MEM_READ_WRITE,
+            kernelIndex);
+
+        cl_memory_descriptors.push_back( 
+            clCreateBuffer(
+                context, 
+                CL_MEM_READ_WRITE, 
+                vertexBytes, 
+                NULL,
+                &localstatus)
+        );
+
+        clSetKernelArg(
+            kernels[kernelIndex], 
+            2, 
+            sizeof(cl_mem), 
+            (void *) &cl_memory_descriptors[0]); 
+
+        errors.push_back(localstatus);
+
+/*
+        cl_mem bufferC = KernelArgs(
+            vertexBuffer,
+            vertexBytes,
+            2,
+            CL_MEM_WRITE_ONLY);
+
+*/
+        size_t globalWorkSize[1];
+        
+        // There are 'elements' work-items 
+        globalWorkSize[0] = nVerticies/9;
+
+        // STEP 11: Enqueue the kernel for execution
+        
+        // Execute the kernel by using 
+        // clEnqueueNDRangeKernel().
+        // 'globalWorkSize' is the 1D dimension of the 
+        // work-items
+        localstatus = clEnqueueNDRangeKernel(
+            cmdQueue, 
+            kernels[kernelIndex], 
+            1, 
+            NULL, 
+            globalWorkSize, 
+            NULL, 
+            0, 
+            NULL, 
+            NULL);
+
+        errors.push_back(localstatus);
+        
+        // Free OpenCL resources
+        clReleaseMemObject(bufferA);
+        clReleaseMemObject(bufferB);
+        //clReleaseMemObject(bufferC);
+
+        // Free host resources
+
+        return;
+    }
+
+
+    bool IsPowerOfTwo(unsigned long x)
+        {   return (x & (x - 1)) == 0;  }
+
+    void TwosPad(std::vector<float> &verticies)
+    {
+        //  --------------------------
+        //
+        // pad our verticies with -1's
+        //
+        //  --------------------------
+        unsigned int n = verticies.size()/VERTEX_FLOATS - 1;
+        unsigned int p2 = 0;
+        
+        original_vertex_size = verticies.size();
+        do ++p2; while( (n >>= 0x1) != 0);
+        padded_size = 0x1 << p2;
+
+        padd = 0;
+
+        // it just needs to be larger really
+        // I don't know if CPP can do this
+        // in an efficient way
+        while(verticies.size() < padded_size*9)
+        {
+            verticies.push_back(-1.0);
+            ++padd;
+        }
+    }
+
+    void RemovePad(std::vector<float> &verticies)
+        {   verticies.erase(verticies.begin(), 
+            verticies.begin()+padd*VERTEX_FLOATS);   }
+
+    float* RemovePad(float* verticies)
+        {   return (float*) verticies + 
+                sizeof(float)*padd*VERTEX_FLOATS;   }
+
+    void Sort(unsigned int kernelIndex)
+    {
+        cl_int local_status;
+        size_t global_size = padded_size/2;
+        size_t local_size = WORK_GROUP_SIZE;
+        //size_t num_of_work_groups = global_size/local_size;
+
+        clSetKernelArg(
+            kernels[kernelIndex], 
+            0, 
+            sizeof(cl_mem), 
+            (void *) &cl_memory_descriptors[0]);
+        
+        unsigned int stage, passOfStage, numStages, temp;
+        stage = passOfStage = numStages = 0;
+        
+        for(temp = padded_size; temp > 1; temp >>= 1)
+            ++numStages;
+     
+        global_size = padded_size>>1;
+        local_size = WORK_GROUP_SIZE;
+        
+        for(stage = 0; stage < numStages; ++stage)
+        {
+            // stage of the algorithm
+            clSetKernelArg(
+                kernels[kernelIndex], 
+                1, 
+                sizeof(int), 
+                (void *)&stage);
+
+            // Every stage has stage + 1 passes
+            for(passOfStage = 0; passOfStage < stage + 1; 
+                ++passOfStage) 
+            {
+                // pass of the current stage
+                printf("Pass no: %d\n",passOfStage);
+                local_status = clSetKernelArg(
+                    kernels[kernelIndex], 
+                    2, 
+                    sizeof(int), 
+                    (void *)&passOfStage);
+                    
+                    errors.push_back(local_status);
+                //
+                // Enqueue a kernel run call.
+                // Each thread writes a sorted pair.
+                // So, the number of threads (global) should be half the 
+                // length of the input buffer.
+                //
+                clEnqueueNDRangeKernel(
+                    cmdQueue, 
+                    kernels[kernelIndex], 
+                    1, 
+                    NULL,
+                    &global_size, 
+                    &local_size, 
+                    0, 
+                    NULL, 
+                    NULL);  
+
+                clFinish(cmdQueue);
+            } //end of for passStage = 0:stage-1
+        } //end of for stage = 0:numStage-1
+
+    }
 };
 
 

@@ -11,6 +11,7 @@
 #include <cstdlib>
 #include <vector>
 #include <string.h>
+#include <math.h>
 
 #include "kernels.hpp"
 
@@ -472,7 +473,7 @@ void VertexTransform(
         verticies.insert(
             verticies.end(), 
             padded_size*9 - verticies.size(),
-            -1.0);
+            -INFINITY); //defined in math.h
     }
 
     void RemovePad(std::vector<float> &verticies)

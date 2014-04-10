@@ -36,7 +36,7 @@ using namespace std;
 class CLI
 {
 public:
-    std::vector<float>::const_iterator start_of_padding;
+    std::vector<float>::iterator start_of_padding;
 
     size_t padded_size, original_vertex_size;
 

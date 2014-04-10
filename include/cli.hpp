@@ -27,7 +27,7 @@
 
 #define WORK_GROUP_SIZE 64 // logical errors occur after work group size > 128
 #define VERTEX_FLOATS 9
-#define VERTEX_TRANFORM_SIZE 12
+#define TRANFORM_SIZE 12
 
 #define STATUS_CHAR_SIZE 35
 
@@ -47,6 +47,7 @@ public:
     cl_platform_id *platforms;
     // used for 2: Discover and initialize the devices
     cl_uint numDevices;
+
     cl_device_id *devices;
     // used for 3: Create a context
     cl_context context;
@@ -277,6 +278,7 @@ public:
             Errors(*i, tmp);
             printf("%s\n", tmp);
         }
+        errors.clear();
     }
 
 
@@ -367,16 +369,14 @@ void VertexTransform(
         cl_int localstatus;
         unsigned int nVerticies = verticies.size();
         size_t vertexBytes = nVerticies * sizeof(float);
-        float transformArray[VERTEX_TRANFORM_SIZE];
         
-        for (int i = 0; i < VERTEX_TRANFORM_SIZE; ++i)
-        {
+        float transformArray[TRANFORM_SIZE];
+        for (int i = 0; i < TRANFORM_SIZE; ++i)
             transformArray[i] = transform[i]; 
-        }
 
         cl_mem bufferA = KernelArgs(
             transformArray,
-            VERTEX_TRANFORM_SIZE*sizeof(float),
+            TRANFORM_SIZE*sizeof(float),
             0,
             CL_MEM_READ_ONLY,
             kernelIndex);

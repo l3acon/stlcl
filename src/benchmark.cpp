@@ -36,8 +36,6 @@ int main()
     std::vector<float> verticies;
     std::vector<float> normals;
     
-    //later we can just use the memory in a std::vector?
-
     float A[12];
 
     //initalize our transform matrix naively
@@ -93,7 +91,7 @@ int main()
     #if TIME
     timespec watch[BENCHSIZE], stop[BENCHSIZE];
     for (int i = 0; i < BENCHSIZE; ++i)
-    {s
+    {
         clock_gettime(CLOCK_REALTIME, &watch[i]);
     #endif        
         
@@ -108,16 +106,11 @@ int main()
             0);
 
         cli.Finish();
-        printf("VT done s:%d\n", verticies.size());
+        printf("VT done\n");
 
         cli.Sort(1);
         cli.Finish();
-
         printf("Sort done\n");
-
-
-        cli.Finish();
-
 
         cli.ComputeNormals(
             verticies.size(), 
@@ -125,7 +118,6 @@ int main()
             CL_TRUE,
             2);
         cli.Finish();
-
         printf("CN done\n");
         
         clEnqueueReadBuffer(
@@ -139,11 +131,10 @@ int main()
              NULL, 
              NULL);
 
-        for (int i = 0; i < verticies.size()/3; ++i)
-        {
-            printf("i=%d: %f\n", i, normalBuffer[i]);
-        }
-
+        // for (int i = 0; i < verticies.size()/3; ++i)
+        // {
+        //     printf("i=%d: %f\n", i, normalBuffer[i]);
+        // }
 
         #if CL_ERRORS
         printf("all:\n");

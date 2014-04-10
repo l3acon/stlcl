@@ -468,7 +468,8 @@ void VertexTransform(
         // it just needs to be larger really
         // I don't know if CPP can do this
         // in an efficient way
-        start_of_padding =  verticies.insert(
+        start_of_padding = verticies.end();
+        verticies.insert(
             verticies.end(), 
             padded_size*9 - verticies.size(),
             -1.0);
@@ -519,7 +520,7 @@ void VertexTransform(
                 #endif
                 local_status = clSetKernelArg(
                     kernels[kernelIndex], 
-                    2, 
+                    2,  
                     sizeof(int), 
                     (void *)&passOfStage);
                     

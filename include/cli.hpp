@@ -36,10 +36,10 @@ using namespace std;
 class CLI
 {
 public:
+    std::vector<float>::const_iterator start_of_padding;
 
-    unsigned int padd;
-    size_t original_vertex_size;
-    size_t padded_size;
+    size_t padded_size, original_vertex_size;
+
 
     //initialize our data we're keeping track of
     // used for  1: Discover and initialize the platforms
@@ -465,25 +465,18 @@ void VertexTransform(
         do ++p2; while( (n >>= 0x1) != 0);
         padded_size = 0x1 << p2;
 
-        padd = 0;
-
         // it just needs to be larger really
         // I don't know if CPP can do this
         // in an efficient way
-        while(verticies.size() < padded_size*9)
-        {
-            verticies.push_back(-1.0);
-            ++padd;
-        }
+        start_of_padding =  verticies.insert(
+            verticies.end(), 
+            padded_size*9 - verticies.size(),
+            -1.0);
     }
 
     void RemovePad(std::vector<float> &verticies)
-        {   verticies.erase(verticies.begin(), 
-            verticies.begin()+padd*VERTEX_FLOATS);   }
+        {   verticies.erase(start_of_padding, verticies.end() );   }
 
-    float* RemovePad(float* verticies)
-        {   return (float*) verticies + 
-                sizeof(float)*padd*VERTEX_FLOATS;   }
 
     void Sort(unsigned int kernelIndex)
     {

@@ -66,7 +66,7 @@ int main()
         cli.numDevices);
     cli.kernels.push_back(vertexTransform.kernel);
     printf("VTz:\n");
-    vertexTransform.PrintErrors();
+
 
     OCLS bitonicZSort(
         bitonic_STL_sort_source,
@@ -76,7 +76,6 @@ int main()
         cli.numDevices);
     cli.kernels.push_back(bitonicZSort.kernel);
     printf("BZSz:\n");
-    bitonicZSort.PrintErrors();
 
     OCLS computeNormals(
         stl_cl_computeNormals_kernel_source,
@@ -86,7 +85,12 @@ int main()
         cli.numDevices);
     cli.kernels.push_back(computeNormals.kernel);
     printf("CNz:\n");
+
+    #if CL_ERRORS
+    vertexTransform.PrintErrors();
+    bitonicZSort.PrintErrors();
     computeNormals.PrintErrors();
+    #endif
     // do the benchmark
     #if TIME
     timespec watch[BENCHSIZE], stop[BENCHSIZE];

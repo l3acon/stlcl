@@ -514,7 +514,9 @@ void VertexTransform(
                 ++passOfStage) 
             {
                 // pass of the current stage
+                #if ERRORS
                 printf("Pass no: %d\n",passOfStage);
+                #endif
                 local_status = clSetKernelArg(
                     kernels[kernelIndex], 
                     2, 

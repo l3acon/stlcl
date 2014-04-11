@@ -476,9 +476,24 @@ void VertexTransform(
             0.0); 	//defined in math.h
     }
 
-    void RemovePad(std::vector<float> &verticies)
-        {   verticies.erase(start_of_padding, verticies.end() );   }
+   // void RemovePad(std::vector<float> &verticies)
+   //     {   verticies.erase(start_of_padding, verticies.end() );   }
+		void  EnqueueUnpaddedBuffer(float* vertices )
+		{
+			clEnqueueReadBuffer(
+             cmdQueue, 
+             cl_memory_descriptors[0], 
+             CL_TRUE,        // CL_TRUE is a BLOCKING read
+             (padded_size*9 - original_vertex_size )*sizeof(float), 
+             original_vertex_size*sizeof(float), 
+             vertices, 
+             0, 
+             NULL, 
+             NULL);
 
+
+			return ;
+		}
 
     void Sort(unsigned int kernelIndex)
     {

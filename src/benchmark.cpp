@@ -20,7 +20,7 @@
 #include "ocls.hpp"
 
 
-#define CL_ERRORS 1
+#define CL_ERRORS 0
 
 #ifndef _WIN32
 #ifndef __APPLE__
@@ -125,23 +125,24 @@ int main()
         printf("CN done\n");
         
         //read the original number of verticies
-        clEnqueueReadBuffer(
-             cli.cmdQueue, 
-             cli.cl_memory_descriptors[0], 
-             CL_TRUE,        // CL_TRUE is a BLOCKING read
-             (verticies.size() - cli.original_vertex_size )*sizeof(float), 
-             cli.original_vertex_size*sizeof(float), 
-             vertexBuffer, 
-             0, 
-             NULL, 
-             NULL);
+        //clEnqueueReadBuffer(
+        //     cli.cmdQueue, 
+        //     cli.cl_memory_descriptors[0], 
+        //     CL_TRUE,        // CL_TRUE is a BLOCKING read
+        //     (verticies.size() - cli.original_vertex_size )*sizeof(float), 
+        //     cli.original_vertex_size*sizeof(float), 
+        //     vertexBuffer, 
+        //     0, 
+        //     NULL, 
+        //     NULL);
+
+				cli.EnqueueUnpaddedBuffer(vertexBuffer);
 
 
-
-         for (size_t k = 2; k < cli.original_vertex_size; k+=9)
-         {
-             printf("i=%d: %f\n", k, vertexBuffer[k]);
-         }
+        for (size_t k = 2; k < cli.original_vertex_size; k+=9)
+        {
+            printf("i=%d: %f\n", k, vertexBuffer[k]);
+        }
 
         #if CL_ERRORS
         printf("all:\n");

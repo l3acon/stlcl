@@ -25,7 +25,7 @@
 #ifndef _WIN32
 #ifndef __APPLE__
 #define TIME 1
-#define BENCHSIZE 10
+#define BENCHSIZE 1 
 #endif
 #endif
 
@@ -129,7 +129,7 @@ int main()
              cli.cmdQueue, 
              cli.cl_memory_descriptors[0], 
              CL_TRUE,        // CL_TRUE is a BLOCKING read
-             0, 
+             (verticies.size() - cli.original_vertex_size )*sizeof(float), 
              cli.original_vertex_size*sizeof(float), 
              vertexBuffer, 
              0, 
@@ -138,10 +138,10 @@ int main()
 
 
 
-        // for (int i = 0; i < verticies.size()/3; ++i)
-        // {
-        //     printf("i=%d: %f\n", i, normalBuffer[i]);
-        // }
+         for (size_t k = 2; k < cli.original_vertex_size; k+=9)
+         {
+             printf("i=%d: %f\n", k, vertexBuffer[k]);
+         }
 
         #if CL_ERRORS
         printf("all:\n");

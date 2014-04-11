@@ -26,7 +26,7 @@
 #error Platform not supported
 #endif
 
-#define WORK_GROUP_SIZE 512 // logical errors occur after work group size > 128
+#define WORK_GROUP_SIZE 128 // logical errors occur after work group size > 128
 #define VERTEX_FLOATS 9
 #define TRANFORM_SIZE 12
 
@@ -473,7 +473,7 @@ void VertexTransform(
         verticies.insert(
             verticies.end(), 
             padded_size*9 - verticies.size(),
-            -INFINITY); 	//defined in math.h
+            0.0); 	//defined in math.h
     }
 
     void RemovePad(std::vector<float> &verticies)
@@ -484,8 +484,8 @@ void VertexTransform(
     {
         cl_int local_status;
         size_t global_size = padded_size/2;
-        //size_t local_size = WORK_GROUP_SIZE;
-				size_t local_size = global_size;
+        size_t local_size = WORK_GROUP_SIZE;
+				//size_t local_size = global_size;
         //size_t num_of_work_groups = global_size/local_size;
 
         clSetKernelArg(

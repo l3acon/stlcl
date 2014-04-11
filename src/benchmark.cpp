@@ -25,13 +25,13 @@
 #ifndef _WIN32
 #ifndef __APPLE__
 #define TIME 1
-#define BENCHSIZE 1 
+#define BENCHSIZE 16 
 #endif
 #endif
 
 int main() 
 {
-    const char* stlFile = "Ring.stl";
+    const char* stlFile = "Engine_Block.stl";
 
     std::vector<float> verticies;
     std::vector<float> normals;
@@ -124,25 +124,13 @@ int main()
         cli.Finish();
         printf("CN done\n");
         
-        //read the original number of verticies
-        //clEnqueueReadBuffer(
-        //     cli.cmdQueue, 
-        //     cli.cl_memory_descriptors[0], 
-        //     CL_TRUE,        // CL_TRUE is a BLOCKING read
-        //     (verticies.size() - cli.original_vertex_size )*sizeof(float), 
-        //     cli.original_vertex_size*sizeof(float), 
-        //     vertexBuffer, 
-        //     0, 
-        //     NULL, 
-        //     NULL);
-
-				cli.EnqueueUnpaddedBuffer(vertexBuffer);
+        cli.EnqueueUnpaddedBuffer(vertexBuffer);
 
 
-        for (size_t k = 2; k < cli.original_vertex_size; k+=9)
-        {
-            printf("i=%d: %f\n", k, vertexBuffer[k]);
-        }
+        //for (size_t k = 2; k < cli.original_vertex_size; k+=9)
+        //{
+        //    printf("i=%d: %f\n", k, vertexBuffer[k]);
+        //}
 
         #if CL_ERRORS
         printf("all:\n");

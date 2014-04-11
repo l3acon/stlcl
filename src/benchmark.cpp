@@ -25,7 +25,7 @@
 #ifndef _WIN32
 #ifndef __APPLE__
 #define TIME 1
-#define BENCHSIZE 16 
+#define BENCHSIZE 16
 #endif
 #endif
 
@@ -58,13 +58,14 @@ int main()
 
     // set up CLInterface resrouces
     CLI cli;
-
+    // this could be cleaned up much more
     OCLS vertexTransform(stl_cl_vertexTransform_kernel_source,
         "_kVertexTransform",
         cli.context,
         cli.devices,
         cli.numDevices);
     cli.kernels.push_back(vertexTransform.kernel);
+    const int vtKernel_Descriptor = 0;
     printf("VTz:\n");
 
 
@@ -75,6 +76,8 @@ int main()
         cli.devices,
         cli.numDevices);
     cli.kernels.push_back(bitonicZSort.kernel);
+    const int bzsKernel_Descriptor = 1;
+
     printf("BZSz:\n");
 
     OCLS computeNormals(
@@ -84,6 +87,8 @@ int main()
         cli.devices,
         cli.numDevices);
     cli.kernels.push_back(computeNormals.kernel);
+    const int cnKernel_Descriptor = 2;
+
     printf("CNz:\n");
 
     #if CL_ERRORS
@@ -101,18 +106,20 @@ int main()
         
         cli.TwosPad(verticies);
 
+        // allocate buffers for out data output
         float* vertexBuffer = (float*) malloc(sizeof(float) * verticies.size());
         float* normalBuffer = (float*) malloc(sizeof(float) * verticies.size()/3);
 
+        // do the transform
         cli.VertexTransform(
             &A[0], 
             verticies,
-            0);
+            vtKernel_Descriptor); 
 
         cli.Finish();
         printf("VT done\n");
 
-        cli.Sort(1);
+        cli.Sort(bzsKernel_Descriptor);
         cli.Finish();
         printf("Sort done\n");
 
@@ -120,7 +127,7 @@ int main()
             verticies.size(), 
             normalBuffer, 
             CL_TRUE,
-            2);
+            cnKernel_Descriptor);
         cli.Finish();
         printf("CN done\n");
         

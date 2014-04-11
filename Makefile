@@ -54,3 +54,4 @@ $(BUILDDIR)/%.o:	$(SRCDIR)/%.$(SRCEXT) $(ALLDEP)
 
 clean:
 	rm build/*.o
+	rm build/out

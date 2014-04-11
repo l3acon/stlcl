@@ -124,16 +124,19 @@ int main()
         cli.Finish();
         printf("CN done\n");
         
+        //read the original number of verticies
         clEnqueueReadBuffer(
              cli.cmdQueue, 
              cli.cl_memory_descriptors[0], 
              CL_TRUE,        // CL_TRUE is a BLOCKING read
              0, 
-             verticies.size()*sizeof(float), 
+             cli.original_vertex_size*sizeof(float), 
              vertexBuffer, 
              0, 
              NULL, 
              NULL);
+
+
 
         // for (int i = 0; i < verticies.size()/3; ++i)
         // {

@@ -20,7 +20,7 @@
 #include "ocls.hpp"
 
 
-#define CL_ERRORS 0
+#define CL_STATS 1
 
 #ifndef _WIN32
 #ifndef __APPLE__
@@ -56,92 +56,103 @@ int main()
         return 1;
     }
 
-    // set up CLInterface resrouces
-    CLI cli;
-    // this could be cleaned up much more
-    OCLS vertexTransform(stl_cl_vertexTransform_kernel_source,
+    // set up CLInterface (CL context/devices)
+    CLI stlcl;
+
+    // build opencl kernels and programs
+    // this is kind of messy
+    OCLS vertexTransform(
+        stl_cl_vertexTransform_kernel_source,
         "_kVertexTransform",
-        cli.context,
-        cli.devices,
-        cli.numDevices);
-    cli.kernels.push_back(vertexTransform.kernel);
+        stlcl.context,
+        stlcl.devices,
+        stlcl.numDevices);
+    stlcl.kernels.push_back(vertexTransform.kernel);
     const int vtKernel_Descriptor = 0;
-    printf("VTz:\n");
 
 
     OCLS bitonicZSort(
         bitonic_STL_sort_source,
         "_kBitonic_STL_Sort",
-        cli.context,
-        cli.devices,
-        cli.numDevices);
-    cli.kernels.push_back(bitonicZSort.kernel);
+        stlcl.context,
+        stlcl.devices,
+        stlcl.numDevices);
+    stlcl.kernels.push_back(bitonicZSort.kernel);
     const int bzsKernel_Descriptor = 1;
 
-    printf("BZSz:\n");
 
     OCLS computeNormals(
         stl_cl_computeNormals_kernel_source,
         "_kComputeNormals",
-        cli.context,
-        cli.devices,
-        cli.numDevices);
-    cli.kernels.push_back(computeNormals.kernel);
+        stlcl.context,
+        stlcl.devices,
+        stlcl.numDevices);
+    stlcl.kernels.push_back(computeNormals.kernel);
     const int cnKernel_Descriptor = 2;
 
-    printf("CNz:\n");
 
-    #if CL_ERRORS
+    #if CL_STATS
+    printf("VTz:\n");
     vertexTransform.PrintErrors();
+    printf("BZSz:\n");
     bitonicZSort.PrintErrors();
+    printf("CNz:\n");
     computeNormals.PrintErrors();
     #endif
+
     // do the benchmark
     #if TIME
     timespec watch[BENCHSIZE], stop[BENCHSIZE];
     for (int i = 0; i < BENCHSIZE; ++i)
     {
         clock_gettime(CLOCK_REALTIME, &watch[i]);
-    #endif        
-        
-        cli.TwosPad(verticies);
+    #endif
 
-        // allocate buffers for out data output
+        // allocate buffers for our data output
         float* vertexBuffer = (float*) malloc(sizeof(float) * verticies.size());
         float* normalBuffer = (float*) malloc(sizeof(float) * verticies.size()/3);
+        
+        // padd the verticies for our sort
+        stlcl.TwosPad(verticies);
 
         // do the transform
-        cli.VertexTransform(
+        stlcl.VertexTransform(
             &A[0], 
             verticies,
             vtKernel_Descriptor); 
-
-        cli.Finish();
+        stlcl.Finish();        //block till done
         printf("VT done\n");
 
-        cli.Sort(bzsKernel_Descriptor);
-        cli.Finish();
+        //  sort on Z's
+        stlcl.Sort(bzsKernel_Descriptor);
+        stlcl.Finish();        //block till done
         printf("Sort done\n");
+        
+        //  buffer back the vertices
+        stlcl.EnqueueUnpaddedVertexBuffer(vertexBuffer);
 
-        cli.ComputeNormals(
+        //  compute normal vectors
+        int cnDes = stlcl.ComputeNormals(
             verticies.size(), 
             normalBuffer, 
-            CL_TRUE,
+            CL_TRUE,                //blocking
             cnKernel_Descriptor);
-        cli.Finish();
+
+        stlcl.Finish();        //block till done
         printf("CN done\n");
         
-        cli.EnqueueUnpaddedBuffer(vertexBuffer);
+        stlcl.EnqueueUnpaddedNormalBuffer(cnDes, normalBuffer);
 
+        stlcl.Finish();
 
         //for (size_t k = 2; k < cli.original_vertex_size; k+=9)
         //{
         //    printf("i=%d: %f\n", k, vertexBuffer[k]);
         //}
 
-        #if CL_ERRORS
+        #if CL_STATS
         printf("all:\n");
-        cli.PrintErrors();
+        stlcl.PrintErrors();
         //printf("_kbitonic_STL_Sort:\n");
         //cli.bitonicZSort.PrintErrors();
         //printf("_kComputeNormal:\n");
@@ -150,6 +161,7 @@ int main()
         
         free(vertexBuffer);
         free(normalBuffer);
+        stlcl.ReleaseDeviceMemory();
     #if TIME    
         clock_gettime(CLOCK_REALTIME, &stop[i]); // Works on Linux but not OSX
     }
@@ -160,7 +172,7 @@ int main()
     printf("[elapsed time] %f\n", acc/BENCHSIZE);
     #endif
     
-    cli.Release();
+    stlcl.Release();
     vertexTransform.Release();
 
     return 0;

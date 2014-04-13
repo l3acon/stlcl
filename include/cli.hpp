@@ -191,8 +191,7 @@ public:
         return clmemDes;
     }
 
-    // release CLI memory
-    void Release()
+    void ReleaseDeviceMemory()
     {
         //release all cl_mem memory discriptor objects
         for( std::vector<cl_mem>::const_iterator i = cl_memory_descriptors.begin(); 
@@ -200,13 +199,19 @@ public:
         {
             clReleaseMemObject(*i);
         }
+
+    }
+
+    // release CLI memory
+    void Release()
+    {
+        ReleaseDeviceMemory();
         //clReleaseKernel(kernels[i]);
         //clReleaseProgram(program);
         clReleaseCommandQueue(cmdQueue);
         clReleaseContext(context);
         free(platforms);
         free(devices);
-
     }
 
     // translate OpenCL status codes to human
@@ -268,9 +273,24 @@ public:
         return; 
     }
 
-    // print all CLI status/errors
-    //
     void PrintErrors()
+    {
+        char tmp[STATUS_CHAR_SIZE];
+
+        for( std::vector<cl_int>::const_iterator i = errors.begin(); i != errors.end(); ++i)
+        {
+            if(*i)
+            {
+                Errors(*i, tmp);
+                printf("%s\n", tmp);
+
+            }
+        }
+        errors.clear();
+    }
+
+
+    void PrintStats()
     {
         char tmp[STATUS_CHAR_SIZE];
 
@@ -283,14 +303,14 @@ public:
     }
 
 
-
-void ComputeNormals(
+int ComputeNormals(
     unsigned int nVerticies,
     float *normalBuffer,
     int cli_flags,
     unsigned int kernelIndex)
 {
     cl_int localstatus;
+    int output_memory_descriptor = -1;
 
     //size_t vertexBytes = sizeof(float)*12;
     //size_t vertexBytes = nVerticies * sizeof(float);
@@ -313,6 +333,8 @@ void ComputeNormals(
             CL_MEM_READ_WRITE,
             kernelIndex)
     );
+
+    output_memory_descriptor = cl_memory_descriptors.size() - 1;
 
     // Define an index space (global work size) of work 
     // items for 
@@ -359,7 +381,7 @@ void ComputeNormals(
 
     // Free host resources
 
-    return ;
+    return output_memory_descriptor;
 }
 
 void VertexTransform(
@@ -478,12 +500,12 @@ void VertexTransform(
 
    // void RemovePad(std::vector<float> &verticies)
    //     {   verticies.erase(start_of_padding, verticies.end() );   }
-		void  EnqueueUnpaddedBuffer(float* vertices )
+		void  EnqueueUnpaddedVertexBuffer(float* vertices )
 		{
 			clEnqueueReadBuffer(
              cmdQueue, 
              cl_memory_descriptors[0], 
-             CL_TRUE,        // CL_TRUE is a BLOCKING read
+             CL_FALSE,        // CL_TRUE is a BLOCKING read
              (padded_size*9 - original_vertex_size )*sizeof(float), 
              original_vertex_size*sizeof(float), 
              vertices, 
@@ -494,6 +516,27 @@ void VertexTransform(
 
 			return ;
 		}
+
+        void  EnqueueUnpaddedNormalBuffer(int des, float* normals )
+        {
+            // should do some sanity checks
+            // like for everything
+
+            clEnqueueReadBuffer(
+             cmdQueue, 
+             cl_memory_descriptors[des], 
+             CL_FALSE,        // CL_TRUE is a BLOCKING read
+             (padded_size*9 - original_vertex_size )/3 * sizeof(float), 
+             original_vertex_size*sizeof(float)/3, 
+             normals, 
+             0, 
+             NULL, 
+             NULL);
+
+
+            return ;
+        }
+
 
     void Sort(unsigned int kernelIndex)
     {

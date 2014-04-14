@@ -31,19 +31,20 @@
 
 int main() 
 {
-    const char* stlFile = "Ring.stl";
+    const char* stlFile = "MiddleRioGrande_Final_OneInchSpacing.stl";
 
     std::vector<float> verticies;
     std::vector<float> normals;
     
     float A[12];
+		unsigned int facets;
 
     //initalize our transform matrix naively
     for (int i = 0; i < 12; ++i)
         A[i] = (float) i;
 
     //file stuff
-    if(stlRead(stlFile, verticies, normals))
+    if(-1 ==  (facets = stlRead(stlFile, verticies, normals)))
     {
         std::cout<<"ERROR: reading file"<<std::endl;
         return 1;
@@ -55,6 +56,7 @@ int main()
         std::cout<<"ERROR: verticies and normals don't make sense up"<<std::endl;
         return 1;
     }
+		printf("Triangles: %d\n", (int) facets);
 
     // set up CLInterface (CL context/devices)
     CLI stlcl;

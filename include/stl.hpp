@@ -18,7 +18,7 @@ typedef struct xformmat_s
 	float stlTransformMatrix[STL_TRANSFORM_MATRIX_SIZE];
 } XformMat;
 
-int stlRead(const char* stlFile, 
+unsigned int stlRead(const char* stlFile, 
     std::vector<float> &verticies, 
     std::vector<float> &normals);
 

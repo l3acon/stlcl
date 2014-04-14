@@ -13,7 +13,7 @@
 #include "stl.hpp"
 
 
-int stlRead(
+unsigned int  stlRead(
     const char* stlFile, 
     std::vector<float> &verticies, 
     std::vector<float> &normals)
@@ -33,7 +33,9 @@ int stlRead(
 
     fread(title,80,1,ifile);
     fread( (void *) &nFaces, 4,1,ifile);
-    for (size_t i = 0; i < nFaces; i+=12)
+		verticies.reserve(nFaces*9*sizeof(float));
+		normals.reserve(nFaces*3*sizeof(float));
+    for (size_t i = 0; i < nFaces*12; i+=12)
     {
         fread( (void*) facet, sizeof(float), 12,ifile);
         for(size_t j = 0; j < 3; j++)
@@ -43,7 +45,7 @@ int stlRead(
             verticies.push_back(facet[j]);
         fread(facet, sizeof(unsigned short), 1, ifile);
     }
-    return 0;
+    return nFaces;
 }
 
 int stlWrite(

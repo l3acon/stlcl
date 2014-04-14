@@ -305,12 +305,11 @@ public:
 
 int ComputeNormals(
     unsigned int nVerticies,
-    float *normalBuffer,
+    //float *normalBuffer,
     int cli_flags,
     unsigned int kernelIndex)
 {
     cl_int localstatus;
-    int output_memory_descriptor = -1;
 
     //size_t vertexBytes = sizeof(float)*12;
     //size_t vertexBytes = nVerticies * sizeof(float);
@@ -326,13 +325,23 @@ int ComputeNormals(
         (void*) &cl_memory_descriptors[0]);
 
     cl_memory_descriptors.push_back( 
-        KernelArgs(
-            normalBuffer,
-            normalBytes,
-            1,
+        clCreateBuffer(
+            context,
             CL_MEM_READ_WRITE,
-            kernelIndex)
+            normalBytes,
+            NULL,
+            &localstatus)
     );
+    errors.push_back(localstatus);
+     int output_memory_descriptor = cl_memory_descriptors.size()-1;
+    
+    localstatus = clSetKernelArg(
+            kernels[kernelIndex],
+            1,
+            sizeof(cl_mem),
+            (void *) &cl_memory_descriptors[output_memory_descriptor]); 
+
+    errors.push_back(localstatus);
 
     output_memory_descriptor = cl_memory_descriptors.size() - 1;
 
@@ -365,16 +374,16 @@ int ComputeNormals(
 
     errors.push_back(localstatus);
 
-    clEnqueueReadBuffer(
-        cmdQueue, 
-        cl_memory_descriptors[1], 
-        cli_flags,            // CL_TRUE is a BLOCKING read
-        0, 
-        normalBytes, 
-        normalBuffer, 
-        0, 
-        NULL, 
-        NULL);
+    //clEnqueueReadBuffer(
+    //    cmdQueue, 
+    //    cl_memory_descriptors[1], 
+    //    cli_flags,            // CL_TRUE is a BLOCKING read
+    //    0, 
+    //    normalBytes, 
+    //    normalBuffer, 
+    //    0, 
+    //    NULL, 
+    //    NULL);
 
     // Free OpenCL resources
     //clReleaseMemObject(buffer);
@@ -500,33 +509,36 @@ void VertexTransform(
 
    // void RemovePad(std::vector<float> &verticies)
    //     {   verticies.erase(start_of_padding, verticies.end() );   }
-		void  EnqueueUnpaddedVertexBuffer(float* vertices )
-		{
-			clEnqueueReadBuffer(
-             cmdQueue, 
-             cl_memory_descriptors[0], 
-             CL_FALSE,        // CL_TRUE is a BLOCKING read
-             (padded_size*9 - original_vertex_size )*sizeof(float), 
-             original_vertex_size*sizeof(float), 
-             vertices, 
-             0, 
-             NULL, 
-             NULL);
 
+	void  EnqueueUnpaddedVertexBuffer(float* vertices )
+	{
+        //printf("vf: %d\n",(padded_size*9 - original_vertex_size ) );
+	   clEnqueueReadBuffer(
+            cmdQueue, 
+            cl_memory_descriptors[0], 
+            CL_FALSE,        // CL_TRUE is a BLOCKING read
+            (padded_size*9 - original_vertex_size )*sizeof(float), 
+            original_vertex_size*sizeof(float), 
+            vertices, 
+            0, 
+            NULL, 
+            NULL);
+	return ;
+	}
 
-			return ;
-		}
-
-        void  EnqueueUnpaddedNormalBuffer(int des, float* normals )
-        {
+    void  EnqueueUnpaddedNormalBuffer(int des, float* normals )
+    {
             // should do some sanity checks
             // like for everything
 
-            clEnqueueReadBuffer(
+        //printf("cf: %d\n", (padded_size*3 - original_vertex_size/3 ) );
+        //printf("osize: %d\n", original_vertex_size);
+
+        clEnqueueReadBuffer(
              cmdQueue, 
              cl_memory_descriptors[des], 
              CL_FALSE,        // CL_TRUE is a BLOCKING read
-             (padded_size*9 - original_vertex_size )/3 * sizeof(float), 
+             (padded_size*3 - original_vertex_size/3 ) * sizeof(float), 
              original_vertex_size*sizeof(float)/3, 
              normals, 
              0, 
@@ -534,8 +546,8 @@ void VertexTransform(
              NULL);
 
 
-            return ;
-        }
+        return ;
+    }
 
 
     void Sort(unsigned int kernelIndex)

@@ -31,7 +31,7 @@
 
 int main() 
 {
-    const char* stlFile = "Engine_Block.stl";
+    const char* stlFile = "Ring.stl";
 
     std::vector<float> verticies;
     std::vector<float> normals;
@@ -108,6 +108,8 @@ int main()
         clock_gettime(CLOCK_REALTIME, &watch[i]);
     #endif
 
+        printf("vert: %d norm: %d \n",verticies.size(), normals.size() );
+
         // allocate buffers for our data output
         float* vertexBuffer = (float*) malloc(sizeof(float) * verticies.size());
         float* normalBuffer = (float*) malloc(sizeof(float) * verticies.size()/3);
@@ -134,16 +136,16 @@ int main()
         //  compute normal vectors
         int cnDes = stlcl.ComputeNormals(
             verticies.size(), 
-            normalBuffer, 
+            //normalBuffer, 
             CL_TRUE,                //blocking
             cnKernel_Descriptor);
 
         stlcl.Finish();        //block till done
         printf("CN done\n");
         
-        stlcl.EnqueueUnpaddedNormalBuffer(cnDes, normalBuffer);
-
-        stlcl.Finish();
+        // not entirely working yet
+        //stlcl.EnqueueUnpaddedNormalBuffer(cnDes, normalBuffer);
+        //stlcl.Finish();
 
         //for (size_t k = 2; k < cli.original_vertex_size; k+=9)
         //{

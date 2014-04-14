@@ -20,7 +20,7 @@
 #include "ocls.hpp"
 
 
-#define CL_STATS 1
+#define CL_STATS 0
 
 #ifndef _WIN32
 #ifndef __APPLE__
@@ -31,7 +31,7 @@
 
 int main() 
 {
-    const char* stlFile = "MiddleRioGrande_Final_OneInchSpacing.stl";
+    const char* stlFile = "Engine_Block.stl";
 
     std::vector<float> verticies;
     std::vector<float> normals;

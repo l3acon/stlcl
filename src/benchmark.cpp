@@ -31,7 +31,7 @@
 
 int main() 
 {
-    const char* stlFile = "Engine_Block.stl";
+    const char* stlFile = "MiddleRioGrande_Final_OneInchSpacing.stl";
 
     std::vector<float> verticies;
     std::vector<float> normals;
@@ -125,12 +125,10 @@ int main()
             verticies,
             vtKernel_Descriptor); 
         stlcl.Finish();        //block till done
-        printf("VT done\n");
 
         //  sort on Z's
         stlcl.Sort(bzsKernel_Descriptor);
         stlcl.Finish();        //block till done
-        printf("Sort done\n");
         
         //  buffer back the vertices
         stlcl.EnqueueUnpaddedVertexBuffer(vertexBuffer);
@@ -138,12 +136,10 @@ int main()
         //  compute normal vectors
         int cnDes = stlcl.ComputeNormals(
             verticies.size(), 
-            //normalBuffer, 
             CL_TRUE,                //blocking
             cnKernel_Descriptor);
 
         stlcl.Finish();        //block till done
-        printf("CN done\n");
         
         // not entirely working yet
         //stlcl.EnqueueUnpaddedNormalBuffer(cnDes, normalBuffer);

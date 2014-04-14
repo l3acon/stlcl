@@ -307,7 +307,6 @@ public:
 
 int ComputeNormals(
     unsigned int nVerticies,
-    //float *normalBuffer,
     int cli_flags,
     unsigned int kernelIndex)
 {

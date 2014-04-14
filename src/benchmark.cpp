@@ -108,7 +108,7 @@ int main()
         clock_gettime(CLOCK_REALTIME, &watch[i]);
     #endif
 
-        printf("vert: %d norm: %d \n",verticies.size(), normals.size() );
+        //printf("vert: %d norm: %d \n",verticies.size(), normals.size() );
 
         // allocate buffers for our data output
         float* vertexBuffer = (float*) malloc(sizeof(float) * verticies.size());
@@ -174,7 +174,7 @@ int main()
     printf("[elapsed time] %f\n", acc/BENCHSIZE);
     #endif
     
-    //stlcl.Release();
+    stlcl.Release();
     vertexTransform.Release();
 
     return 0;

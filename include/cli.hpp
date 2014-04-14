@@ -200,6 +200,8 @@ public:
             clReleaseMemObject(*i);
         }
 
+        cl_memory_descriptors.clear();
+
     }
 
     // release CLI memory

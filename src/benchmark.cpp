@@ -174,7 +174,7 @@ int main()
     printf("[elapsed time] %f\n", acc/BENCHSIZE);
     #endif
     
-    stlcl.Release();
+    //stlcl.Release();
     vertexTransform.Release();
 
     return 0;

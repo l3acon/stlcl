@@ -399,7 +399,25 @@ void CLI::TwosPad(std::vector<float> &verticies)
 // void RemovePad(std::vector<float> &verticies)
 //     {   verticies.erase(start_of_padding, verticies.end() );   }
 
+
 void  CLI::EnqueueUnpaddedVertexBuffer(float* vertices )
+{
+    //printf("vf: %d\n",(padded_size*9 - original_vertex_size ) );
+   clEnqueueReadBuffer(
+        cmdQueue, 
+        cl_memory_descriptors[0], 
+        CL_FALSE,        // CL_TRUE is a BLOCKING read
+        0, 
+        original_vertex_size*sizeof(float), 
+        vertices, 
+        0, 
+        NULL, 
+        NULL);
+return ;
+}
+
+//  removes padding 
+void  CLI::EnqueuePaddedVertexBuffer(float* vertices )  
 {
     //printf("vf: %d\n",(padded_size*9 - original_vertex_size ) );
    clEnqueueReadBuffer(
@@ -415,7 +433,32 @@ void  CLI::EnqueueUnpaddedVertexBuffer(float* vertices )
 return ;
 }
 
+
 void  CLI::EnqueueUnpaddedNormalBuffer(int des, float* normals )
+{
+        // should do some sanity checks
+        // like for everything
+
+    //printf("cf: %d\n", (padded_size*3 - original_vertex_size/3 ) );
+    //printf("osize: %d\n", original_vertex_size);
+
+    clEnqueueReadBuffer(
+         cmdQueue, 
+         cl_memory_descriptors[des], 
+         CL_FALSE,        // CL_TRUE is a BLOCKING read
+         0, 
+         original_vertex_size*sizeof(float)/3, 
+         normals, 
+         0, 
+         NULL, 
+         NULL);
+
+
+    return ;
+}
+
+//  removes padding (might not work)
+void  CLI::EnqueuePaddedNormalBuffer(int des, float* normals )
 {
         // should do some sanity checks
         // like for everything
@@ -437,6 +480,7 @@ void  CLI::EnqueueUnpaddedNormalBuffer(int des, float* normals )
 
     return ;
 }
+
 
 
 void CLI::Sort(unsigned int kernelIndex)

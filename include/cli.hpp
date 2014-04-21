@@ -33,7 +33,6 @@ public:
 
     size_t padded_size, original_vertex_size;
 
-
     //initialize our data we're keeping track of
     // used for  1: Discover and initialize the platforms
     cl_uint numPlatforms;
@@ -136,18 +135,6 @@ public:
     }
 
     void Finish();
-
-
-    // wraper function for kernel arguments
-    // this reduces the code required to
-    // setup buffers and set arguments
-    cl_mem KernelArgs(
-        void* ptr,              // I want to restrict this
-        size_t bufferBytes,  
-        int argn, 
-        cl_mem_flags memflag,
-        unsigned int kernelIndex);
-
     void ReleaseDeviceMemory();
 
     // release CLI memory
@@ -160,6 +147,18 @@ public:
     void PrintErrors();
 
     void PrintStats();
+
+
+    // wraper function for kernel arguments
+    // this reduces the code required to
+    // setup buffers and set arguments
+    cl_mem KernelArgs(
+        void* ptr,              // I want to restrict this
+        size_t bufferBytes,  
+        int argn, 
+        cl_mem_flags memflag,
+        unsigned int kernelIndex);
+
 
     int ComputeNormals(
         unsigned int nVerticies,
@@ -179,8 +178,10 @@ public:
    //     {   verticies.erase(start_of_padding, verticies.end() );   }
 
 	void  EnqueueUnpaddedVertexBuffer(float* vertices );
+    void  EnqueuePaddedVertexBuffer(float* vertices );      //  removes pad
 
     void  EnqueueUnpaddedNormalBuffer(int des, float* normals );
+    void  EnqueuePaddedNormalBuffer(int des, float* normals );  //  removes pad
 
 
     void Sort(unsigned int kernelIndex);

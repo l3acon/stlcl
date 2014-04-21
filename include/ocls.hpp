@@ -22,7 +22,6 @@
 #define STATUS_CHAR_SIZE 35
 
 
-
 class OCLS
 {
 public:
@@ -90,7 +89,6 @@ public:
         clReleaseKernel(kernel);
         clReleaseProgram(program);
     }
-
 
     // translate OpenCL status codes to human
     // readable errors

@@ -20,12 +20,12 @@
 #include "ocls.hpp"
 
 
-#define CL_STATS 0
+#define CL_STATS 1
 
 #ifndef _WIN32
 #ifndef __APPLE__
 #define TIME 1
-#define BENCHSIZE 16
+#define BENCHSIZE 1
 #endif
 #endif
 
@@ -174,7 +174,7 @@ int main()
     
     stlcl.Release();
     vertexTransform.Release();
-
+		computeNormals.Release();
     return 0;
 }
 

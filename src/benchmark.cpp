@@ -131,7 +131,7 @@ int main()
         stlcl.Finish();        //block till done
         
         //  buffer back the vertices
-        stlcl.EnqueueUnpaddedVertexBuffer(vertexBuffer);
+        stlcl.EnqueuePaddedVertexBuffer(vertexBuffer);
 
         //  compute normal vectors
         int cnDes = stlcl.ComputeNormals(

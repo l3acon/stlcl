@@ -19,6 +19,9 @@
 #error Platform not supported
 #endif
 
+#define STATUS_CHAR_SIZE 35
+
+
 
 class OCLS
 {

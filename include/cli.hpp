@@ -177,7 +177,7 @@ public:
    // void RemovePad(std::vector<float> &verticies)
    //     {   verticies.erase(start_of_padding, verticies.end() );   }
 
-	void  EnqueueUnpaddedVertexBuffer(float* vertices );
+	void  EnqueueUnpaddedVertexBuffer(int n,  float* vertices );
     void  EnqueuePaddedVertexBuffer(float* vertices );      //  removes pad
 
     void  EnqueueUnpaddedNormalBuffer(int des, float* normals );

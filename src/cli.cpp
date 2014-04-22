@@ -400,7 +400,7 @@ void CLI::TwosPad(std::vector<float> &verticies)
 //     {   verticies.erase(start_of_padding, verticies.end() );   }
 
 
-void  CLI::EnqueueUnpaddedVertexBuffer(float* vertices )
+void  CLI::EnqueueUnpaddedVertexBuffer(int n, float* vertices )
 {
     //printf("vf: %d\n",(padded_size*9 - original_vertex_size ) );
    clEnqueueReadBuffer(
@@ -408,7 +408,7 @@ void  CLI::EnqueueUnpaddedVertexBuffer(float* vertices )
         cl_memory_descriptors[0], 
         CL_FALSE,        // CL_TRUE is a BLOCKING read
         0, 
-        original_vertex_size*sizeof(float), 
+        n*sizeof(float), 
         vertices, 
         0, 
         NULL, 

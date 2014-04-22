@@ -29,18 +29,20 @@
 #endif
 #endif
 
+#define XFORM_FLOATS 16
+
 int main() 
 {
-    const char* stlFile = "MiddleRioGrande_Final_OneInchSpacing.stl";
+    const char* stlFile = "Ring.stl";
 
     std::vector<float> verticies;
     std::vector<float> normals;
     
-    float A[12];
+    float A[XFORM_FLOATS];
 		unsigned int facets;
 
     //initalize our transform matrix naively
-    for (int i = 0; i < 12; ++i)
+    for (int i = 0; i < XFORM_FLOATS; ++i)
         A[i] = (float) i;
 
     //file stuff
@@ -117,7 +119,7 @@ int main()
         float* normalBuffer = (float*) malloc(sizeof(float) * verticies.size()/3);
         
         // padd the verticies for our sort
-        stlcl.TwosPad(verticies);
+        //stlcl.TwosPad(verticies);
 
         // do the transform
         stlcl.VertexTransform(
@@ -127,38 +129,39 @@ int main()
         stlcl.Finish();        //block till done
 
         //  sort on Z's
-        stlcl.Sort(bzsKernel_Descriptor);
-        stlcl.Finish();        //block till done
+        //stlcl.Sort(bzsKernel_Descriptor);
+        //stlcl.Finish();        //block till done
         
         //  buffer back the vertices
-        stlcl.EnqueuePaddedVertexBuffer(vertexBuffer);
+        stlcl.EnqueueUnpaddedVertexBuffer(verticies.size(), vertexBuffer);
+        stlcl.Finish();
 
         //  compute normal vectors
-        int cnDes = stlcl.ComputeNormals(
-            verticies.size(), 
-            CL_TRUE,                //blocking
-            cnKernel_Descriptor);
-
-        stlcl.Finish();        //block till done
+//        int cnDes = stlcl.ComputeNormals(
+//            verticies.size(), 
+//            CL_TRUE,                //blocking
+//            cnKernel_Descriptor);
+//
+//        stlcl.Finish();        //block till done
         
         // not entirely working yet
         //stlcl.EnqueueUnpaddedNormalBuffer(cnDes, normalBuffer);
-        //stlcl.Finish();
 
-        //for (size_t k = 2; k < cli.original_vertex_size; k+=9)
-        //{
-        //    printf("i=%d: %f\n", k, vertexBuffer[k]);
-        //}
+        for (size_t k = 0; k < verticies.size(); k+=1)
+        {
+            printf("i=%d: %f\n", k, vertexBuffer[k]);
+        }
+				printf("%d\n", verticies.size());
 
         #if CL_STATS
         printf("all:\n");
-        stlcl.PrintErrors();
+        stlcl.PrintStats();
         //printf("_kbitonic_STL_Sort:\n");
         //cli.bitonicZSort.PrintErrors();
         //printf("_kComputeNormal:\n");
         //cli.computeNormals.PrintErrors();
         #endif
-        
+       
         free(vertexBuffer);
         free(normalBuffer);
         stlcl.ReleaseDeviceMemory();

@@ -180,7 +180,7 @@ public:
 	void  EnqueueUnpaddedVertexBuffer(int n,  float* vertices );
     void  EnqueuePaddedVertexBuffer(float* vertices );      //  removes pad
 
-    void  EnqueueUnpaddedNormalBuffer(int des, float* normals );
+    void  EnqueueUnpaddedNormalBuffer(int des, int n, float* normals );
     void  EnqueuePaddedNormalBuffer(int des, float* normals );  //  removes pad
 
 

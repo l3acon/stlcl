@@ -434,7 +434,7 @@ return ;
 }
 
 
-void  CLI::EnqueueUnpaddedNormalBuffer(int des, float* normals )
+void  CLI::EnqueueUnpaddedNormalBuffer(int des, int n, float* normals )
 {
         // should do some sanity checks
         // like for everything
@@ -447,7 +447,7 @@ void  CLI::EnqueueUnpaddedNormalBuffer(int des, float* normals )
          cl_memory_descriptors[des], 
          CL_FALSE,        // CL_TRUE is a BLOCKING read
          0, 
-         original_vertex_size*sizeof(float)/3, 
+         n*sizeof(float), 
          normals, 
          0, 
          NULL, 

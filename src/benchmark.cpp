@@ -20,12 +20,12 @@
 #include "ocls.hpp"
 
 
-#define CL_STATS 1
+#define CL_STATS 0
 
 #ifndef _WIN32
 #ifndef __APPLE__
 #define TIME 1
-#define BENCHSIZE 1
+#define BENCHSIZE 4
 #endif
 #endif
 
@@ -33,7 +33,7 @@
 
 int main() 
 {
-    const char* stlFile = "Ring.stl";
+    const char* stlFile = "MiddleRioGrande_Final_OneInchSpacing.stl";
 
     std::vector<float> verticies;
     std::vector<float> normals;
@@ -51,11 +51,13 @@ int main()
         std::cout<<"ERROR: reading file"<<std::endl;
         return 1;
     }
+		
+		//printf("nfaces: %d\n vert: %d\n norm: %d\n", facets, verticies.size(), normals.size());
 
     //check sanity for verticies and normals
     if( fmod(verticies.size(),9.0) !=  0 || fmod(normals.size(),3.0) != 0 )
     {
-        std::cout<<"ERROR: verticies and normals don't make sense up"<<std::endl;
+        std::cout<<"ERROR: verticies and normals don't make sense"<<std::endl;
         return 1;
     }
 		printf("Triangles: %d\n", (int) facets);
@@ -104,7 +106,7 @@ int main()
     computeNormals.PrintErrors();
     #endif
 
-    // do the benchmark
+		// do the benchmark
     #if TIME
     timespec watch[BENCHSIZE], stop[BENCHSIZE];
     for (int i = 0; i < BENCHSIZE; ++i)
@@ -119,7 +121,7 @@ int main()
         float* normalBuffer = (float*) malloc(sizeof(float) * verticies.size()/3);
         
         // padd the verticies for our sort
-        //stlcl.TwosPad(verticies);
+        stlcl.TwosPad(verticies);
 
         // do the transform
         stlcl.VertexTransform(
@@ -127,31 +129,30 @@ int main()
             verticies,
             vtKernel_Descriptor); 
         stlcl.Finish();        //block till done
-
         //  sort on Z's
-        //stlcl.Sort(bzsKernel_Descriptor);
-        //stlcl.Finish();        //block till done
+        stlcl.Sort(bzsKernel_Descriptor);
+        stlcl.Finish();        //block till done
         
         //  buffer back the vertices
-        stlcl.EnqueueUnpaddedVertexBuffer(verticies.size(), vertexBuffer);
-        stlcl.Finish();
+        stlcl.EnqueuePaddedVertexBuffer(vertexBuffer);
+        //stlcl.Finish();
 
         //  compute normal vectors
-//        int cnDes = stlcl.ComputeNormals(
-//            verticies.size(), 
-//            CL_TRUE,                //blocking
-//            cnKernel_Descriptor);
-//
-//        stlcl.Finish();        //block till done
+        int cnDes = stlcl.ComputeNormals(
+            verticies.size(), 
+            CL_TRUE,                //blocking
+            cnKernel_Descriptor);
+
+        stlcl.Finish();        //block till done
         
         // not entirely working yet
-        //stlcl.EnqueueUnpaddedNormalBuffer(cnDes, normalBuffer);
+        stlcl.EnqueuePaddedNormalBuffer(cnDes, normalBuffer);
 
-        for (size_t k = 0; k < verticies.size(); k+=1)
-        {
-            printf("i=%d: %f\n", k, vertexBuffer[k]);
-        }
-				printf("%d\n", verticies.size());
+        //for (size_t k = 0; k < verticies.size(); k+=1)
+        //{
+        //    printf("i=%d: %f\n", k, vertexBuffer[k]);
+        //}
+				//printf("%d\n", verticies.size());
 
         #if CL_STATS
         printf("all:\n");
@@ -162,9 +163,9 @@ int main()
         //cli.computeNormals.PrintErrors();
         #endif
        
-        free(vertexBuffer);
-        free(normalBuffer);
-        stlcl.ReleaseDeviceMemory();
+        //free(vertexBuffer);
+        //free(normalBuffer);
+        //stlcl.ReleaseDeviceMemory();
     #if TIME    
         clock_gettime(CLOCK_REALTIME, &stop[i]); // Works on Linux but not OSX
     }

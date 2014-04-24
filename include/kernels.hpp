@@ -69,7 +69,7 @@ const char * stl_cl_computeNormals_kernel_source  =
 " - (vi[ii+1]-vi[ii+0])*(vi[ii+8]-vi[ii+6]); 			"
 "\n    t[2] = (vi[ii+1]-vi[ii+0])*(vi[ii+5]-vi[ii+3])   "
 " - (vi[ii+4]-vi[ii+3])*(vi[ii+2]-vi[ii+0]); 			"
-"\n    t[3] = t[1]+t[2]+t[3];                           "
+"\n    t[3] = t[0]+t[1]+t[2];                           "
 "\n                                                     "
 "\n    no[io  ] = t[0]/t[3];                         	"   
 "\n    no[io+1] = t[1]/t[3];                         	"  

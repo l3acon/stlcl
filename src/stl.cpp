@@ -59,6 +59,10 @@ int stlWrite(
     std::vector<float> &verticies, 
     std::vector<float> &normals);
 
+//
+//	transforms
+//
+
 void VertexTransform(            
             float *xMat,    
             float *vi,      
@@ -98,8 +102,7 @@ void ComputeNormals(
             float *no,
 						int n)
 {
-	int ii ;         
-	int io ;         
+	int io = 0;         
 
 	for(int ii = 0; ii < n; ii+=NORMALS_PER_FACET)
 	{
@@ -110,47 +113,13 @@ void ComputeNormals(
 		t[0] = (vi[ii+4]-vi[ii+3])*(vi[ii+8]-vi[ii+6]) - (vi[ii+7]-vi[ii+6])*(vi[ii+5]-vi[ii+3]); 			
 		t[1] = (vi[ii+7]-vi[ii+6])*(vi[ii+2]-vi[ii+0]) - (vi[ii+1]-vi[ii+0])*(vi[ii+8]-vi[ii+6]); 			
 		t[2] = (vi[ii+1]-vi[ii+0])*(vi[ii+5]-vi[ii+3]) - (vi[ii+4]-vi[ii+3])*(vi[ii+2]-vi[ii+0]); 			
-		t[3] = t[1]+t[2]+t[3];                         
-																									 
-		no[io  ] = t[0]/t[3];                           
-		no[io+1] = t[1]/t[3];                          
-		no[io+2] = t[2]/t[3];                          
+		t[3] = t[0]+t[1]+t[2];                         
+	
+		//	probably do better error checking
+		no[io  ] = t[3] ? t[0]/t[3] : 0;                           
+		no[io+1] = t[3] ? t[1]/t[3] : 0;                          
+		no[io+2] = t[3] ? t[2]/t[3] : 0;                          
 	}
 }                                                  
 
 
-//float stlVerifyTransform(
-//    const float* xMat, 
-//    float* v, 
-//    float* xformedv, 
-//    unsigned int nFaces)
-//{
-//    float verto[9];
-//
-//    for( size_t i = 0; i < nFaces; i += 12)
-//    {
-//        // x1-3 = 0 1 2
-//        // y1-3 = 3 4 5
-//        // z1-3 = 6 7 8
-//
-//        //x coordinates
-//        verto[i+0] = xMat[0]*v[i+0] + xMat[1]*v[i+3] + xMat[2]*v[i+6] + xMat[3];
-//        verto[i+1] = xMat[0]*v[i+1] + xMat[1]*v[i+4] + xMat[2]*v[i+7] + xMat[3];
-//        verto[i+2] = xMat[0]*v[i+2] + xMat[1]*v[i+5] + xMat[2]*v[i+8] + xMat[3];
-//                        
-//        //y coordinates 
-//        verto[i+3] = xMat[4]*v[i+0] + xMat[5]*v[i+3] + xMat[6]*v[i+6] + xMat[7];
-//        verto[i+4] = xMat[4]*v[i+1] + xMat[5]*v[i+4] + xMat[6]*v[i+7] + xMat[7];
-//        verto[i+5] = xMat[4]*v[i+2] + xMat[5]*v[i+5] + xMat[6]*v[i+8] + xMat[7];
-//                       
-//        //z coordinates
-//        verto[i+6] = xMat[8]*v[i+0] + xMat[9]*v[i+3] + xMat[10]*v[i+6] + xMat[11];
-//        verto[i+7] = xMat[8]*v[i+1] + xMat[9]*v[i+4] + xMat[10]*v[i+7] + xMat[11];
-//        verto[i+8] = xMat[8]*v[i+2] + xMat[9]*v[i+5] + xMat[10]*v[i+8] + xMat[11];
-//
-//        for(int j = 0; j < 9; ++j)
-//            if(fabs(verto[j+i]) - fabs(xformedv[j+i]) > 1e-4 )
-//                return j+i;
-//    }
-//    return 0.0;
-//}

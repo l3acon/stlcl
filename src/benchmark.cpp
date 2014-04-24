@@ -14,8 +14,8 @@
 #include <time.h>
 
 #include "stl.hpp"
+#include "qsorting.hpp"
 
-// the following inclues might be consolidated
 #include "cli.hpp"
 #include "ocls.hpp"
 
@@ -39,7 +39,7 @@ int main()
     std::vector<float> normals;
     
     float A[XFORM_FLOATS];
-		unsigned int facets;
+		int facets;
 
     //initalize our transform matrix naively
     for (int i = 0; i < XFORM_FLOATS; ++i)
@@ -95,7 +95,10 @@ int main()
         stlcl.numDevices);
     stlcl.kernels.push_back(computeNormals.kernel);
     const int cnKernel_Descriptor = 2;
-
+   
+		// allocate buffers for our data output
+    float* vertexBuffer = (float*) malloc(sizeof(float) * verticies.size());
+    float* normalBuffer = (float*) malloc(sizeof(float) * verticies.size()/3);
 
     #if CL_STATS
     printf("VTz:\n");
@@ -108,6 +111,7 @@ int main()
 
 		// do the benchmark
     #if TIME
+		printf("[begin] CPU BENCHMARK\n");
     timespec watch[BENCHSIZE], stop[BENCHSIZE];
     for (int i = 0; i < BENCHSIZE; ++i)
     {
@@ -115,13 +119,40 @@ int main()
     #endif
 
         //printf("vert: %d norm: %d \n",verticies.size(), normals.size() );
+				VertexTransform(&A[0], &verticies.front(), vertexBuffer, verticies.size());
+			  qsort(vertexBuffer, verticies.size()/9, sizeof(float)*9, vertex_comparator);
 
-        // allocate buffers for our data output
-        float* vertexBuffer = (float*) malloc(sizeof(float) * verticies.size());
-        float* normalBuffer = (float*) malloc(sizeof(float) * verticies.size()/3);
-        
+				ComputeNormals(vertexBuffer, normalBuffer, normals.size());
+
+				//for (size_t k = 4*verticies.size()/5; k < verticies.size(); k+=1)
+        //{
+        //    printf("i=%d: %f\n", k, vertexBuffer[k]);
+        //}
+				//printf("%d\n", verticies.size());
+		
+    #if TIME    
+        clock_gettime(CLOCK_REALTIME, &stop[i]); // Works on Linux but not OSX
+    }
+
+    double acc = 0.0;
+    for (int i = 0; i < BENCHSIZE; ++i)
+        acc += stop[i].tv_sec - watch[i].tv_sec + (stop[i].tv_nsec - watch[i].tv_nsec)/1e9;
+    BENCHSIZE ? printf("[elapsed time] %f\n", acc/BENCHSIZE) : printf("Invalid BENCHSIZE\n");
+    #endif
+   
+
+		// do the other benchmark
+    #if TIME
+		printf("[begin] GPU  BENCHMARK\n");
+		for (int i = 0; i < BENCHSIZE; ++i)
+    {
+        clock_gettime(CLOCK_REALTIME, &watch[i]);
+    #endif
+
+        //printf("vert: %d norm: %d \n",verticies.size(), normals.size() );
+       
         // padd the verticies for our sort
-        stlcl.TwosPad(verticies);
+        //int original_vertex_size = stlcl.TwosPad(verticies);
 
         // do the transform
         stlcl.VertexTransform(
@@ -129,12 +160,13 @@ int main()
             verticies,
             vtKernel_Descriptor); 
         stlcl.Finish();        //block till done
-        //  sort on Z's
-        stlcl.Sort(bzsKernel_Descriptor);
-        stlcl.Finish();        //block till done
+        
+				//  sort on Z's
+        //stlcl.Sort(bzsKernel_Descriptor);
+        //stlcl.Finish();        //block till done
         
         //  buffer back the vertices
-        stlcl.EnqueuePaddedVertexBuffer(vertexBuffer);
+        stlcl.EnqueueUnpaddedVertexBuffer(verticies.size(), vertexBuffer);
         //stlcl.Finish();
 
         //  compute normal vectors
@@ -144,16 +176,16 @@ int main()
             cnKernel_Descriptor);
 
         stlcl.Finish();        //block till done
-        
         // not entirely working yet
-        stlcl.EnqueuePaddedNormalBuffer(cnDes, normalBuffer);
+        //stlcl.EnqueueUnpaddedNormalBuffer( verticies.size(), cnDes, normalBuffer);
 
         //for (size_t k = 0; k < verticies.size(); k+=1)
         //{
         //    printf("i=%d: %f\n", k, vertexBuffer[k]);
         //}
 				//printf("%d\n", verticies.size());
-
+				
+				//verticies.resize(original_vertex_size);
         #if CL_STATS
         printf("all:\n");
         stlcl.PrintStats();
@@ -170,15 +202,11 @@ int main()
         clock_gettime(CLOCK_REALTIME, &stop[i]); // Works on Linux but not OSX
     }
 
-    double acc = 0.0;
+    acc = 0.0;
     for (int i = 0; i < BENCHSIZE; ++i)
         acc += stop[i].tv_sec - watch[i].tv_sec + (stop[i].tv_nsec - watch[i].tv_nsec)/1e9;
-    printf("[elapsed time] %f\n", acc/BENCHSIZE);
+    BENCHSIZE ? printf("[elapsed time] %f\n", acc/BENCHSIZE) : printf("Invalid BENCHSIZE\n");
     #endif
-    
-    stlcl.Release();
-    vertexTransform.Release();
-		computeNormals.Release();
     return 0;
 }
 

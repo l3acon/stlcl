@@ -372,11 +372,11 @@ void CLI::VertexTransform(
 bool CLI::IsPowerOfTwo(unsigned long x)
     {   return (x & (x - 1)) == 0;  }
 
-void CLI::TwosPad(std::vector<float> &verticies)
+int CLI::TwosPad(std::vector<float> &verticies)
 {
     //  --------------------------
     //
-    // pad our verticies with -1's
+    // pad our verticies with 0's
     //
     //  --------------------------
     unsigned int n = verticies.size()/VERTEX_FLOATS - 1;
@@ -385,15 +385,15 @@ void CLI::TwosPad(std::vector<float> &verticies)
     original_vertex_size = verticies.size();
     do ++p2; while( (n >>= 0x1) != 0);
     padded_size = 0x1 << p2;
+   	start_of_padding = verticies.end();
 
-    // it just needs to be larger really
-    // I don't know if CPP can do this
-    // in an efficient way
-    start_of_padding = verticies.end();
     verticies.insert(
         verticies.end(), 
-        padded_size*9 - verticies.size(),
-        0.0); 	//defined in math.h
+        padded_size*VERTEX_FLOATS - verticies.size(),
+        0.0); 	
+		
+		//printf("osize: %d, nsize: %d\n", original_vertex_size, verticies.size()); 
+		return original_vertex_size;
 }
 
 // void RemovePad(std::vector<float> &verticies)

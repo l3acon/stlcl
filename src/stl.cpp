@@ -66,8 +66,8 @@ int stlWrite(
 void VertexTransform(            
             float *xMat,    
             float *vi,      
-            float *verto,
-						int n)       	      
+            float *verto, 
+						float n)       	      
 {
 	for(int i = 0; i < n; i+=VERTICES_PER_FACET)
 	{
@@ -102,11 +102,11 @@ void ComputeNormals(
             float *no,
 						int n)
 {
-	int io = 0;         
+	int ii = 0;         
 
-	for(int ii = 0; ii < n; ii+=NORMALS_PER_FACET)
+	for(int io = 0; io < n; io+=NORMALS_PER_FACET)
 	{
-		io =ii*3;
+		ii =io*3;
 	
 		//fairly sure this actually works              
 		float t[4];                                    

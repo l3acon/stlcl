@@ -172,7 +172,7 @@ public:
 
     bool IsPowerOfTwo(unsigned long x);
 
-    void TwosPad(std::vector<float> &verticies);
+    int TwosPad(std::vector<float> &verticies);
 
    // void RemovePad(std::vector<float> &verticies)
    //     {   verticies.erase(start_of_padding, verticies.end() );   }

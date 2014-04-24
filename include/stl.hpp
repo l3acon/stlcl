@@ -7,6 +7,7 @@
 #include <cmath>
 #include <iostream>
 #include <fstream>
+#include <vector>
 
 
 #define STL_TRANSFORM_MATRIX_SIZE 12
@@ -29,6 +30,17 @@ int stlWrite(const char* stlFile,
 float stlVerifyTransform(const float* xMat, 
     float* v, float* xformedv, 
     unsigned int nFaces);
+
+void ComputeNormals(                             
+            float *vi,                    
+            float *no,
+						int n);
+
+void VertexTransform(            
+            float *xMat,    
+            float *vi,      
+            float *verto, 
+						float n);
 
 
 #endif

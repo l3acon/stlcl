@@ -20,7 +20,7 @@
 #include "ocls.hpp"
 
 
-#define CL_STATS 0
+#define CL_STATS 1
 
 #ifndef _WIN32
 #ifndef __APPLE__
@@ -33,17 +33,39 @@
 
 int main() 
 {
-    const char* stlFile = "MiddleRioGrande_Final_OneInchSpacing.stl";
-
+    const char* stlFile = "Pyramid.stl";
+    int facets;
     std::vector<float> verticies;
     std::vector<float> normals;
-    
-    float A[XFORM_FLOATS];
-		int facets;
+
+    // 30 degree rotation along X axis 
+    // also translation of (0.1, 0.2, 0.5) in X, Y and Z direction.
+    // the matrix is row major 
+    float A[XFORM_FLOATS] = {
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+
+        0.0   ,
+        0.86602540378 ,
+        0.5   ,
+        0.0   ,
+
+        0.0  ,
+        -0.5   ,
+        0.86602540378,
+        0.0  ,
+        
+        0.1,
+        0.2,
+        0.5,
+        1.0
+        };
 
     //initalize our transform matrix naively
-    for (int i = 0; i < XFORM_FLOATS; ++i)
-        A[i] = (float) i;
+    //for (int i = 0; i < XFORM_FLOATS; ++i)
+    //    A[i] = (float) i;
 
     //file stuff
     if(-1 ==  (facets = stlRead(stlFile, verticies, normals)))
@@ -52,7 +74,8 @@ int main()
         return 1;
     }
 		
-		//printf("nfaces: %d\n vert: %d\n norm: %d\n", facets, verticies.size(), normals.size());
+	//printf("nfaces: %d\n vert: %d\n norm: %d\n", facets, verticies.size(), normals.size());
+
 
     //check sanity for verticies and normals
     if( fmod(verticies.size(),9.0) !=  0 || fmod(normals.size(),3.0) != 0 )
@@ -60,7 +83,10 @@ int main()
         std::cout<<"ERROR: verticies and normals don't make sense"<<std::endl;
         return 1;
     }
-		printf("Triangles: %d\n", (int) facets);
+	printf("Triangles: %d\n", (int) facets);
+    
+    if( compareToFile("orginal_vertices.txt", &verticies.front(), verticies.size()) )
+        cout<< "orginal vertices test PASSED" << endl;
 
     // set up CLInterface (CL context/devices)
     CLI stlcl;
@@ -75,7 +101,6 @@ int main()
         stlcl.numDevices);
     stlcl.kernels.push_back(vertexTransform.kernel);
     const int vtKernel_Descriptor = 0;
-
 
     OCLS bitonicZSort(
         bitonic_STL_sort_source,
@@ -95,7 +120,7 @@ int main()
         stlcl.numDevices);
     stlcl.kernels.push_back(computeNormals.kernel);
     const int cnKernel_Descriptor = 2;
-   
+
 		// allocate buffers for our data output
     float* vertexBuffer = (float*) malloc(sizeof(float) * verticies.size());
     float* normalBuffer = (float*) malloc(sizeof(float) * verticies.size()/3);
@@ -118,13 +143,12 @@ int main()
         clock_gettime(CLOCK_REALTIME, &watch[i]);
     #endif
 
-        //printf("vert: %d norm: %d \n",verticies.size(), normals.size() );
-				VertexTransform(&A[0], &verticies.front(), vertexBuffer, verticies.size());
-			  qsort(vertexBuffer, verticies.size()/9, sizeof(float)*9, vertex_comparator);
+        ///printf("vert: %d norm: %d \n",verticies.size(), normals.size() );
+		VertexTransform(&A[0], &verticies.front(), vertexBuffer, verticies.size());
+		//qsort(vertexBuffer, verticies.size()/9, sizeof(float)*9, vertex_comparator);
+		ComputeNormals(vertexBuffer, normalBuffer, normals.size());
 
-				ComputeNormals(vertexBuffer, normalBuffer, normals.size());
-
-				//for (size_t k = 4*verticies.size()/5; k < verticies.size(); k+=1)
+		//for (size_t k = 4*verticies.size()/5; k < verticies.size(); k+=1)
         //{
         //    printf("i=%d: %f\n", k, vertexBuffer[k]);
         //}
@@ -139,7 +163,10 @@ int main()
         acc += stop[i].tv_sec - watch[i].tv_sec + (stop[i].tv_nsec - watch[i].tv_nsec)/1e9;
     BENCHSIZE ? printf("[elapsed time] %f\n", acc/BENCHSIZE) : printf("Invalid BENCHSIZE\n");
     #endif
-   
+
+    cout << "CPU DONE" << endl;
+    if( compareToFile("transformed_vertices.txt", vertexBuffer, verticies.size()) )
+        cout<< "transformed vertices test PASSED" << endl;
 
 		// do the other benchmark
     #if TIME
@@ -167,18 +194,18 @@ int main()
         
         //  buffer back the vertices
         stlcl.EnqueueUnpaddedVertexBuffer(verticies.size(), vertexBuffer);
-        //stlcl.Finish();
+        stlcl.Finish();
 
         //  compute normal vectors
-        int cnDes = stlcl.ComputeNormals(
-            verticies.size(), 
-            CL_TRUE,                //blocking
-            cnKernel_Descriptor);
+        //int cnDes = stlcl.ComputeNormals(
+        //    verticies.size(), 
+        //    CL_TRUE,                //blocking
+        //    cnKernel_Descriptor);
+        //stlcl.Finish();        //block till done
 
-        stlcl.Finish();        //block till done
         // not entirely working yet
         //stlcl.EnqueueUnpaddedNormalBuffer( verticies.size(), cnDes, normalBuffer);
-
+        //stlcl.Finish();
         //for (size_t k = 0; k < verticies.size(); k+=1)
         //{
         //    printf("i=%d: %f\n", k, vertexBuffer[k]);
@@ -186,6 +213,7 @@ int main()
 				//printf("%d\n", verticies.size());
 				
 				//verticies.resize(original_vertex_size);
+
         #if CL_STATS
         printf("all:\n");
         stlcl.PrintStats();
@@ -198,6 +226,11 @@ int main()
         //free(vertexBuffer);
         //free(normalBuffer);
         //stlcl.ReleaseDeviceMemory();
+    
+    cout << "GPU done!" << endl;
+    if( compareToFile("transformed_vertices.txt", vertexBuffer, verticies.size()) )
+        cout<< "transformed vertices test PASSED" << endl;
+
     #if TIME    
         clock_gettime(CLOCK_REALTIME, &stop[i]); // Works on Linux but not OSX
     }

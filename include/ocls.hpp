@@ -55,7 +55,7 @@ public:
         program = clCreateProgramWithSource(
             context, 
             1, 
-            (const char**)&programSource,                                 
+            (const char**)&programSource,
             NULL, 
             &localstatus);
         errors.push_back(localstatus);

@@ -27,6 +27,11 @@ int stlWrite(const char* stlFile,
     std::vector<float> &verticies, 
     std::vector<float> &normals);
 
+int compareToFile(
+    const char* ifileName, 
+    float *buffer,
+    int n);
+
 float stlVerifyTransform(const float* xMat, 
     float* v, float* xformedv, 
     unsigned int nFaces);

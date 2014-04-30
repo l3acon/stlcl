@@ -143,9 +143,10 @@ int main()
         clock_gettime(CLOCK_REALTIME, &watch[i]);
     #endif
 
-        ///printf("vert: %d norm: %d \n",verticies.size(), normals.size() );
-		VertexTransform(&A[0], &verticies.front(), vertexBuffer, verticies.size());
+		
+        VertexTransform(&A[0], &verticies.front(), vertexBuffer, verticies.size());
 		//qsort(vertexBuffer, verticies.size()/9, sizeof(float)*9, vertex_comparator);
+
 		ComputeNormals(vertexBuffer, normalBuffer, normals.size());
 
 		//for (size_t k = 4*verticies.size()/5; k < verticies.size(); k+=1)

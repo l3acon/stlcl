@@ -9,15 +9,22 @@
 #include <cmath>
 #include <iostream>
 #include <fstream>
+#include <cmath>
 
 #include "stl.hpp"
 
 
+//  number of data types in a STL facet
 #define FLOATS_PER_FACET 12
 #define NORMALS_PER_FACET 3
 #define VERTICES_PER_FACET 9
 
+//  floating point data valuess in a transform
 #define TRANSFORM_FLOATS 16
+
+//  tolerance when comparing floatig point numbers
+//  the CPU fails the transformation test at TOL > 10e-6
+#define TOL 10e-5
 
 unsigned int  stlRead(
     const char* stlFile, 
@@ -54,6 +61,33 @@ unsigned int  stlRead(
     return nFaces;
 }
 
+int compareToFile(
+    const char* ifileName, 
+    float *buffer,
+    int n)
+{
+    std::ifstream ifile;
+    ifile.open(ifileName, std::fstream::in);
+
+    float tmp = 0;
+    int rtn = 1;
+
+    if(ifile.is_open())
+    {
+        for (int i = 0; ifile >> tmp; ++i)
+        {
+            if(fabs(tmp - buffer[i]) > TOL || i > n)
+            {
+                printf("%d : c%f o%f\n", i, buffer[i], tmp);
+                rtn = 0 ;
+            }
+        }
+        return rtn;
+    }
+    return 0;
+
+}
+
 int stlWrite(
     const char* stlFile, 
     std::vector<float> &verticies, 
@@ -63,44 +97,43 @@ int stlWrite(
 //	transforms
 //
 
-void VertexTransform(            
-            float *xMat,    
-            float *vi,      
-            float *verto, 
-						float n)       	      
+void VertexTransform(
+    float *xMat,
+    float *vi,
+    float *verto,
+	float n)
 {
 	for(int i = 0; i < n; i+=VERTICES_PER_FACET)
 	{
-    // do the matTransform               	
-                                         	
-    // x1-3 = 0 3 6                      	
-    // y1-3 = 1 4 7                      	
-    // z1-3 = 2 5 8                      	
-                                            
-    //Vertex Transform 2.0  					
-    //Now with a 4x4 matrix!  				
-    //x coordinates                                      							
-    verto[i+0] = xMat[0]*vi[i+0] + xMat[4]*vi[i+1] + xMat[8]*vi[i+2] + xMat[12]; 	
-    verto[i+1] = xMat[0]*vi[i+3] + xMat[4]*vi[i+4] + xMat[8]*vi[i+5] + xMat[12]; 	
-    verto[i+2] = xMat[0]*vi[i+6] + xMat[4]*vi[i+7] + xMat[8]*vi[i+8] + xMat[12]; 	
-                                                                                 	
-    //y coordinates                                                              	
-    verto[i+3] = xMat[1]*vi[i+0] + xMat[5]*vi[i+1] + xMat[9]*vi[i+2] + xMat[13]; 	
-    verto[i+4] = xMat[1]*vi[i+3] + xMat[5]*vi[i+4] + xMat[9]*vi[i+5] + xMat[13]; 	
-    verto[i+5] = xMat[1]*vi[i+6] + xMat[5]*vi[i+7] + xMat[9]*vi[i+8] + xMat[13]; 	
-                                                                                 	
-    //z coordinates                                                              	
-    verto[i+6] = xMat[2]*vi[i+0] + xMat[6]*vi[i+1] + xMat[10]*vi[i+2] + xMat[14];	
-    verto[i+7] = xMat[2]*vi[i+3] + xMat[6]*vi[i+4] + xMat[10]*vi[i+5] + xMat[14];	
-    verto[i+8] = xMat[2]*vi[i+6] + xMat[6]*vi[i+7] + xMat[10]*vi[i+8] + xMat[14];	
+        // do the matTransform
+
+        // x1-3 = 0 3 6
+        // y1-3 = 1 4 7
+        // z1-3 = 2 5 8
+
+        //Vertex Transform 2.0
+        //Now with a 4x4 matrix!
+
+        verto[i+0] = xMat[0]*vi[i+0] + xMat[4]*vi[i+1] + xMat[8]* vi[i+2] + xMat[12];
+        verto[i+1] = xMat[1]*vi[i+0] + xMat[5]*vi[i+1] + xMat[9]* vi[i+2] + xMat[13];
+        verto[i+2] = xMat[2]*vi[i+0] + xMat[6]*vi[i+1] + xMat[10]*vi[i+2] + xMat[14];
+    
+        verto[i+3] = xMat[0]*vi[i+3] + xMat[4]*vi[i+4] + xMat[8]*vi [i+5] + xMat[12];
+        verto[i+4] = xMat[1]*vi[i+3] + xMat[5]*vi[i+4] + xMat[9]*vi [i+5] + xMat[13];
+        verto[i+5] = xMat[2]*vi[i+3] + xMat[6]*vi[i+4] + xMat[10]*vi[i+5] + xMat[14];
+            
+        verto[i+6] = xMat[0]*vi[i+6] + xMat[4]*vi[i+7] + xMat[8]*vi [i+8] + xMat[12];
+        verto[i+7] = xMat[1]*vi[i+6] + xMat[5]*vi[i+7] + xMat[9]*vi [i+8] + xMat[13];
+        verto[i+8] = xMat[2]*vi[i+6] + xMat[6]*vi[i+7] + xMat[10]*vi[i+8] + xMat[14];
+
 	}
-}                                                                                	
+}
 
 
 void ComputeNormals(                             
-            float *vi,                    
-            float *no,
-						int n)
+    float *vi,                    
+    float *no,
+	int n)
 {
 	int ii = 0;         
 

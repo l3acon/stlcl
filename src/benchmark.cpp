@@ -25,7 +25,7 @@
 #ifndef _WIN32
 #ifndef __APPLE__
 #define TIME 1
-#define BENCHSIZE 4
+#define BENCHSIZE 1
 #endif
 #endif
 

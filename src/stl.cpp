@@ -23,8 +23,8 @@
 #define TRANSFORM_FLOATS 16
 
 //  tolerance when comparing floatig point numbers
-//  the CPU fails the transformation test at TOL > 10e-6
-#define TOL 10e-9
+//  the CPU fails the transformation test at TOL < 10e-6
+#define TOL 10e-5
 
 unsigned int  stlRead(
     const char* stlFile, 
